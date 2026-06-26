@@ -1,0 +1,249 @@
+<!-- ===== CSS（必须）===== -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/cal-heatmap@4.2.4/dist/cal-heatmap.css">
+
+<!-- ===== 依赖 ===== -->
+<!-- 注意：V4 版本主要依赖 d3，moment 在 V4 中主要用于插件，基础功能可不引入，但保留以防 Hydro 需要 -->
+<script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
+<script src="https://cdn.jsdelivr.net/npm/moment@2.29.4/moment.min.js"></script>
+<script src="https://unpkg.com/cal-heatmap/dist/plugins/CalendarLabel.min.js"></script>
+
+<style>
+.cal-heatmap-container {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+}
+
+/* 域名（如月份标签）样式 */
+.cal-heatmap-domain {
+    font-size: 12px;
+    fill: #666;
+}
+
+/* 子域（色块）边框 */
+.cal-heatmap-subdomain {
+    stroke: #fff;
+    stroke-width: 1px;
+}
+
+</style>
+
+{% if heatmap|length > 0 %}
+<!-- ===== 结构 ===== -->
+<li class="section__tab-item">
+    <h1 class="section__tab-title">热力图</h1>
+    <div class="section__tab-main" style="padding: 20px 10px; overflow: auto;">
+        <!-- 数据存储区 -->
+        <div id="heatmap-data" style="display:none" data-record='{{ heatmap | json | safe }}'></div>
+        
+        <!-- 图表挂载点 -->
+        <div id="tooltip" style="
+            position: fixed;
+            display: none;
+            background: rgba(0,0,0,0.85);
+            color: #fff;
+            padding: 6px 8px;
+            font-size: 12px;
+            border-radius: 6px;
+            pointer-events: none;
+            z-index: 9999;
+            "></div>
+        <div id="cal-heatmap"></div>
+        <div id="legend" style="justify-content: center; margin-top:10px;display:flex;gap:6px;align-items:center;"></div>
+    </div>
+</li>
+
+<!-- ===== 主要逻辑 ===== -->
+<script src="https://cdn.jsdelivr.net/npm/cal-heatmap@4.2.4/dist/cal-heatmap.min.js"></script>
+<script>
+// 确保 DOM 加载完成
+document.addEventListener('DOMContentLoaded', function() {
+    try {
+        // 1. 获取数据
+        const dataElement = document.getElementById('heatmap-data');
+        if (!dataElement) throw new Error('Data element not found');
+
+        const rawDataStr = dataElement.getAttribute('data-record');
+        const rawData = JSON.parse(rawDataStr);
+
+        // 2. 数据转换：将 Hydro 的格式转换为 cal-heatmap V4 要求的格式
+        // 注意：V4 默认识别的时间字段是 'date'，值字段是 'value'
+        const processedData = rawData.data.map(item => ({
+            date: item.date,   // ISO String 或 时间戳
+            value: item.count // 数值
+        }));
+
+        // 3. 初始化图表 (V4 的写法是 new CalHeatmap())
+        const cal = new CalHeatmap();
+
+        // 4. 计算时间范围 (V4 需要毫秒时间戳)
+        const end = new Date();
+        const start = new Date();
+        start.setMonth(start.getMonth() - 11); // 显示过去 12 个月
+
+        const map = new Map()
+        processedData.forEach(d => map.set(d.date, d))
+
+        // 5. 绘制图表
+        cal.paint({
+            itemSelector: '#cal-heatmap',
+            // 数据源
+            data: {
+                source: processedData,
+                x: 'date',   // 对应数组对象里的 date 字段
+                y: 'value' // 对应数组对象里的 value 字段
+            },
+
+            // 时间范围
+            date: {
+                start: start,
+                end: end,
+                // timezone: 'Asia/Shanghai', // 可选：如果时间有偏差可设置时区
+            },
+
+            // 域配置 (大格子，如月份)
+            domain: {
+                type: 'month',
+                label: {
+                    text: 'MMM', // 标签格式
+                    position: 'top',  // 位置
+                    textAlign: 'middle', // 文本对齐
+                },
+                // V4 中控制间距的方式
+                padding: [2, 2, 2, 2],
+            },
+
+            // 子域配置 (小色块，如天)
+            subDomain: {
+                type: 'day',
+                radius: 2, // 圆角
+                width: 11,
+                height: 12,
+                gutter: 1,
+            },
+
+            // 缩放和平移控制
+            navigation: {
+                scroll: false, // 禁用滚轮缩放，防止页面滚动冲突
+                horizontal: false,
+            },
+
+            // 颜色比例尺
+            scale: {
+                color: {
+                    type: 'linear', // 使用量化比例尺，将数值分段映射到颜色
+                    range: ['#ebedf0', '#9be9a8', '#40c463', '#30a14e', '#216e39'],
+                    domain: [0, 5, 10, 20], // 这里的数字对应颜色的分界线
+                }
+            }
+        },
+    [[
+      CalendarLabel,
+      {
+        position: 'left',
+        key: 'left',
+        text: () => ['Mon', '', 'Wen', '', 'Fri', '', 'Sun'],
+        textAlign: 'middle',
+        width: 30,
+        padding: [26, 5, 0, 0],
+      },
+    ],
+  ]).then(() => {
+            // 🔥 核心修复：渲染完成后，强制修正颜色
+            fixHydroThemeColors();
+        });
+
+        setTimeout(() => {
+            document.querySelectorAll('.ch-domain-container rect').forEach((el, i) => {
+
+                
+                cal.on('click', (event, timestamp) => {
+                    const d = new Date(timestamp)
+
+                    const key = d.toISOString().slice(0, 10)
+
+                    const value = map.get(key)
+
+                    showTooltip(event, value)
+                })
+
+                el.addEventListener('mousemove', (e) => {
+                    tooltip.style.left = (e.clientX - 270) + 'px'
+                    tooltip.style.top = (e.clientY - 370) + 'px'
+                })
+
+                el.addEventListener('mouseleave', hideTooltip)
+            })
+        }, 300)
+
+        const legendColors = [
+        '#ebedf0',
+        '#9be9a8',
+        '#40c463',
+        '#30a14e',
+        '#216e39'
+        ]
+
+        const legend = document.getElementById('legend')
+
+        legend.innerHTML = legendColors.map(c => `
+        <div style="
+            width:14px;
+            height:14px;
+            background:${c};
+            border-radius:3px;
+            border:1px solid #ddd;
+        "></div>
+        `).join(' ') + '<span style="font-size:12px;margin-left:6px;">Less → More</span>'
+    } catch (error) {
+        console.error('热力图渲染失败:', error);
+        // 在页面上显示错误
+        const container = document.getElementById('cal-heatmap');
+        if (container) {
+            container.innerHTML = `<div style="color:red; font-size:12px;">图表加载失败: ${error.message}</div>`;
+        }
+    }
+});
+
+// 定义修复函数
+function fixHydroThemeColors() {
+    const container = document.getElementById('cal-heatmap');
+    if (!container) return;
+
+    // 1. 找到所有的子域方块 (svg)
+    const svgs = container.querySelectorAll('.ch-domain-container svg');
+
+    svgs.forEach(svg => {
+        svg.setAttribute('fill', 'transparent');
+        svg.setAttribute('rx', '2'); // 圆角
+    });
+
+    // 3. 修复月份文字颜色 (如果是黑色看不清，就改成灰色)
+    const texts = container.querySelectorAll('.ch-domain-container text');
+    texts.forEach(text => {
+            text.setAttribute('fill', '#89c3e0');
+            text.setAttribute('font-size', '12px');
+            text.setAttribute('font-weight', 'bold');
+    });
+}
+
+const tooltip = document.getElementById('tooltip')
+
+function showTooltip(event, d) {
+  const date = d.date
+  const value = d.value || 0
+
+  tooltip.style.left = (event.clientX - 270) + 'px'
+  tooltip.style.top = (event.clientY - 370) + 'px'
+
+  tooltip.style.display = 'block'
+  tooltip.innerHTML = `
+    <div><b>${date}</b></div>
+    <div>提交：${value}</div>
+  `
+}
+
+function hideTooltip() {
+  const tooltip = document.getElementById('tooltip')
+  tooltip.style.display = 'none'
+}
+</script>
+{% endif %}

@@ -1,0 +1,11 @@
+{
+    "name": "coin",
+    "version": "1.0.0",
+    "description": "可独立运行的金币插件",
+    "main": "index.ts",
+    "author": "Clancy",
+    "license": "MIT",
+    "dependencies": {
+        "cal-heatmap": "^4.2.4"
+    }
+}

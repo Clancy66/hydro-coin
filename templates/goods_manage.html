@@ -1,0 +1,470 @@
+{% extends "layout/basic.html" %}
+
+{% block content %}
+<style>
+.ladder-round-form {
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    padding: 1.5rem;
+    margin-top: 1rem;
+}
+
+.ladder-round-list {
+    margin-top: 1.5rem;
+    border-top: 1px solid #e2e8f0;
+    padding-top: 1rem;
+}
+
+.report-cards {
+    display: flex;
+    gap: 12px;
+}
+
+.card {
+    flex: 1;
+    padding: 12px;
+    border-radius: 10px;
+    text-align: center;
+    color: #fff;
+}
+
+.card .label {
+    font-size: 12px;
+    opacity: 0.9;
+}
+
+.card .value {
+    font-size: 22px;
+    font-weight: bold;
+    margin-top: 5px;
+}
+
+.card.first { background: #409eff; }
+.card.second { background: #67c23a; }
+.card.third { background: #f56c6c; }
+.card.forth { background: #f56ce5; }
+
+html[data-mantine-color-scheme="dark"] .stage-grid-item  {
+    background-color: #4b4b4b;
+}
+
+.stage-actions {
+    display: flex;
+    gap: 0.3rem;
+    margin-top: 0.75rem;
+    flex-wrap: wrap;
+}
+
+.btn-stage {
+    height: 28px;
+    padding: 0 0.75rem;
+    font-size: 0.75rem;
+    border-radius: 6px;
+    border: 1px solid;
+    cursor: pointer;
+}
+
+.btn-edit { background: #f0f9ff; color: #0369a1; border-color: #bae6fd; }
+.btn-enable { background: #f0fdf4; color: #16a34a; border-color: #bbf7d0; }
+.btn-disable { background: #fef2f2; color: #dc2626; border-color: #fecaca; }
+.btn-hide { background: #eff6ff; color: #2563eb; border-color: #dbeafe; }
+.btn-show { background: #e0f2fe; color: #0369a1; border-color: #bae6fd; }
+.btn-delete { background: #fee2e2; color: #dc2626; border-color: #fecaca; }
+.btn-restore { background: #f0f9ff; color: #0369a1; border-color: #bae6fd; }
+
+.status-badge {
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    margin-left: 0.5rem;
+}
+
+.status-active { background: #dcfce7; color: #166534; }
+.status-disabled { background: #fee2e2; color: #991b1b; }
+.status-hidden { background: #dbeafe; color: #1e40af; }
+
+html[data-mantine-color-scheme="dark"] .stage-type-select {
+    background-color: #4b4b4b;
+}
+</style>
+
+<div class="row">
+    <div class="medium-12 columns">
+        <div id="tab-ladder" class="tab-content">
+            <div class="section manager-main-panel" style="border-radius: 12px; padding: 2rem; box-shadow: 0 4px 20px rgba(0,0,0,0.05);">
+                <div class="manager-header" style="border-bottom: 1px solid #e2e8f0; padding-bottom: 1rem; margin-bottom: 2rem; display: flex; justify-content: space-between; align-items: center;">
+                    <h1 style="font-size: 1.4rem !important; font-weight: 700 !important; display: inline-flex; align-items: center; gap: 8px; margin: 0;">
+                    🎁 商品管理
+                    </h1>
+                    <div>
+                    <a href="/shop" class="btn-lobby-action" style="background: linear-gradient(135deg, #ff9900, #ff5500); color:#fff; text-decoration: none !important; display: inline-flex !important; align-items: center !important; justify-content: center !important; height: 34px !important; padding: 0 1.25rem !important; border-radius: 17px !important; font-weight: 600 !important; font-size: 0.85rem !important; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.25) !important; line-height: 1 !important; text-align: center !important; box-sizing: border-box !important; transition: all 0.2s ease !important;">
+                        🛒 神秘商店
+                    </a>
+                    <a href="{{ url('coin_manage') }}" style="background: linear-gradient(135deg, #87f0db, #58cdb6); color:#fff; text-decoration: none !important; display: inline-flex !important; align-items: center !important; justify-content: center !important; height: 34px !important; padding: 0 1.25rem !important; border-radius: 17px !important; font-weight: 600 !important; font-size: 0.85rem !important; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.25) !important; line-height: 1 !important; text-align: center !important; box-sizing: border-box !important; transition: all 0.2s ease !important;">
+                        <span class="wallet-label">🪙 钱包&背包</span>
+                    </a>
+                    <a href="{{ url('bills_manage') }}" style="background: linear-gradient(135deg, #9cf087, #66cd58); color:#fff; text-decoration: none !important; display: inline-flex !important; align-items: center !important; justify-content: center !important; height: 34px !important; padding: 0 1.25rem !important; border-radius: 17px !important; font-weight: 600 !important; font-size: 0.85rem !important; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.25) !important; line-height: 1 !important; text-align: center !important; box-sizing: border-box !important; transition: all 0.2s ease !important;">
+                        <span class="wallet-label">✏️ 订单核销</span>
+                    </a>
+                    </div>
+                </div>
+                <div class="ladder-round-form">
+                    <h3 style="font-size: 1.1rem; font-weight: 700; color: #0072ff; margin: 0 0 1.25rem 0; display: flex; align-items: center; gap: 6px;">
+                        📝 域内首次 AC 奖励
+                    </h3>
+
+                    <form method="post" action="" style="display: block; margin: 0; padding: 0;">
+                        <input type="hidden" name="csrfToken" value="{{ _csrf }}"> <!-- 注意：后端期望的是 csrfToken -->
+                        <input type="hidden" name="operation" value="domainCoins"> <!-- ✅ 添加操作标识 -->
+                        <div class="row">
+                            <div class="medium-6 columns">
+                                <label style="font-size: 0.85rem; font-weight: 600; margin-bottom: 0.5rem; display: block;">🎯 目标域</label>
+                                <select name="domainId" class="stage-type-select" required style="height: 38px; border-radius: 6px; border: 1px solid #cbd5e1; padding: 0 10px; width: 100%; box-sizing: border-box; font-weight: 600;">
+                                    <option value="">请选择一个域</option>
+                                    <!-- 这里应该由后端动态填充所有可用域 -->
+                                    {% for domain in domains %}
+                                        <option value="{{ domain._id }}">{{ domain.name }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="medium-6 columns">
+                                <label style="font-size: 0.85rem; font-weight: 600; margin-bottom: 0.5rem; display: block;">🪙 首次 AC 奖励</label>
+                                <input type="text" name="price" placeholder="2" required style="height: 38px; border-radius: 6px; border: 1px solid #cbd5e1; padding: 0 12px; width: 100%; box-sizing: border-box; font-size: 0.95rem;">
+                            </div>
+                        </div>
+                        <div style="margin-top: 1rem;">
+                            <div id="manager-answer-guide-tip" style="line-height: 1.1rem; font-size: 0.78rem; padding: 8px 12px; border-radius: 6px; font-weight: 500; display: block; background: #f0fdf4; color: #166534;">
+                                域内题目首次 AC 奖励可以在该选项卡快速设置。如需修改，在该选项卡重新设置即可，也可以点击商品列表的编辑进行修改，请保持【商品名称（域 _id）】不变！
+                            </div>
+                        </div>
+                        <div class="manager-action-footer-row" style="padding-top: 1rem; display: flex; align-items: center; gap: 1rem;">
+                            <button type="submit" class="btn-manager-submit" style="background: linear-gradient(135deg, #00c6ff, #0072ff) !important; color: #ffffff !important; border: none !important; cursor: pointer !important; display: inline-flex !important; align-items: center !important; justify-content: center !important; height: 34px !important; padding: 0 2rem !important; border-radius: 17px !important; font-weight: 600 !important; font-size: 0.85rem !important; box-shadow: 0 4px 12px rgba(0, 114, 255, 0.25) !important; line-height: 1 !important; transition: all 0.2s ease !important;">
+                                提交
+                            </button>
+                        </div>
+                    </form>
+                </div>
+
+                <div class="ladder-round-form">
+                    <h3 style="font-size: 1.1rem; font-weight: 700; color: #0072ff; margin: 0 0 1.25rem 0; display: flex; align-items: center; gap: 6px;">
+                        🎁 {% if not goods %}新增商品{% else %}更新商品{% endif %}
+                    </h3>
+                    <form method="post" action="" enctype="multipart/form-data" style="display: block; margin: 0; padding: 0;">
+                        <input type="hidden" name="csrfToken" value="{{ _csrf }}"> <!-- 注意：后端期望的是 csrfToken -->
+                        {% if goods %}
+                        <input type="hidden" name="goodsId" value="{{ goods._id }}"> <!-- ✅ 添加操作标识 -->
+                        {% endif %}
+                        <input type="hidden" name="operation" value="addGoods"> <!-- ✅ 添加操作标识 -->
+                        <div class="row">
+                            <div class="medium-3 columns" style="margin-bottom: 1rem;">
+                                <label style="font-size: 0.85rem; font-weight: 600; margin-bottom: 0.5rem; display: block;">🏷️ 商品名称</label>
+                                <input type="text" name="name" value="{{goods.name}}" required style="height: 38px; border-radius: 6px; border: 1px solid #cbd5e1; padding: 0 12px; width: 100%; box-sizing: border-box; font-size: 0.95rem;">
+                            </div>
+
+                            <div class="medium-9 columns" style="margin-bottom: 1rem;">
+                                <label style="font-size: 0.85rem; font-weight: 600; margin-bottom: 0.5rem; display: block;">📄 商品描述</label>
+                                <input type="text" name="description" value="{{goods.description}}" required style="height: 38px; border-radius: 6px; border: 1px solid #cbd5e1; padding: 0 12px; width: 100%; box-sizing: border-box; font-size: 0.95rem;">
+                            </div>
+
+                            <div class="medium-3 columns" style="margin-bottom: 1rem;">
+                                <label style="font-size: 0.85rem; font-weight: 600; margin-bottom: 0.5rem; display: block;">🪙 商品价格</label>
+                                <input type="text" name="price" value="{{goods.price}}" placeholder="99" required style="height: 38px; border-radius: 6px; border: 1px solid #cbd5e1; padding: 0 10px; width: 100%; box-sizing: border-box;">
+                            </div>
+
+                            <div class="medium-3 columns" style="margin-bottom: 1rem;">
+                                <label style="font-size: 0.85rem; font-weight: 600; margin-bottom: 0.5rem; display: block;">📦 商品储量（0 表示无限多）</label>
+                                <input type="text" name="amount" value="{{goods.amount}}" placeholder="9999" required style="height: 38px; border-radius: 6px; border: 1px solid #cbd5e1; padding: 0 10px; width: 100%; box-sizing: border-box;">
+                            </div>
+
+                            <div class="medium-3 columns" style="margin-bottom: 1rem;">
+                                <label style="font-size: 0.85rem; font-weight: 600; margin-bottom: 0.5rem; display: block;">🛒 限购数量（0 表示不限购）</label>
+                                <input type="text" name="limit" value="{{goods.limit}}" placeholder="0" required style="height: 38px; border-radius: 6px; border: 1px solid #cbd5e1; padding: 0 10px; width: 100%; box-sizing: border-box;">
+                            </div>
+
+                            <div class="medium-3 columns" style="margin-bottom: 1rem;">
+                                <label style="font-size: 0.85rem; font-weight: 600; margin-bottom: 0.5rem; display: block;">
+                                    🖼️ 商品展示图
+                                </label>
+                                {% if goods.imageUrl %}
+                                <div style="margin-bottom: 0.5rem; border: 1px solid #ddd; padding: 5px; border-radius: 4px; text-align: center;">
+                                    <!-- 注意：这里假设 goods.imageUrl 存的是文件的 _id，需要拼接 /file/ 前缀 -->
+                                    <img src="{{goods.imageUrl}}" alt="当前商品图" style="max-width: 100%; max-height: 150px; object-fit: contain;">
+                                    <p style="font-size: 0.75rem; color: #666; margin-top: 5px;">当前已设置图片</p>
+                                </div>
+                                {% endif %}
+
+                                <!-- 2. 上传控件：仅用于上传新文件 -->
+                                <input type="file"
+                                    id="imgInput"
+                                    value="{{goods.imageUrl}}"
+                                    name="image"
+                                    accept="image/*"
+                                    style="display: block; margin-top: 0.5rem;">
+                            </div>
+
+                            <div class="medium-9 columns" style="margin-bottom: 1rem;">
+                                <label style="font-size: 0.85rem; font-weight: 600; margin-bottom: 0.5rem; display: block;">ℹ️ 商品类型</label>
+                                <div class="status-radio-flex-row" style="display: flex; gap: 1.5rem; flex-wrap: wrap; width: 100%;">
+                                    <label style="flex: 1; background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 8px; padding: 0.75rem 1rem; display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                                        <input type="radio" name="type" value="0" {% if goods.type == 0 %} checked {% endif %} style="margin: 0;">
+                                        <div>
+                                            <b style="color: #16a34a; font-size: 0.9rem; display: block;">实物</b>
+                                        </div>
+                                    </label>
+                                    <label style="flex: 1; background: #ede6ff; border: 1px solid #dac3f5; border-radius: 8px; padding: 0.75rem 1rem; display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                                        <input type="radio" name="type" value="3" {% if goods.type == 3 %} checked {% endif %} style="margin: 0;">
+                                        <div>
+                                            <b style="color: #9253f6; font-size: 0.9rem; display: block;">相框</b>
+                                        </div>
+                                    </label>
+                                    <label style="flex: 1; background: #eff6ff; border: 1px solid #dbeafe; border-radius: 8px; padding: 0.75rem 1rem; display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                                        <input type="radio" name="type" value="4" {% if goods.type == 4 %} checked {% endif %} style="margin: 0;">
+                                        <div>
+                                            <b style="color: #2563eb; font-size: 0.9rem; display: block;">头像</b>
+                                        </div>
+                                    </label>
+                                    <label style="flex: 1; background: #f6dad0; border: 1px solid #f6b7b7; border-radius: 8px; padding: 0.75rem 1rem; display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                                        <input type="radio" name="type" value="5" {% if goods.type == 5 %} checked {% endif %} style="margin: 0;">
+                                        <div>
+                                            <b style="color: #fd5d4b; font-size: 0.9rem; display: block;">背景</b>
+                                        </div>
+                                    </label>
+                                    <label style="flex: 1; background: #c6f1f1; border: 1px solid #99f0ff; border-radius: 8px; padding: 0.75rem 1rem; display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                                        <input type="radio" name="type" value="6" {% if goods.type == 6 %} checked {% endif %} style="margin: 0;">
+                                        <div>
+                                            <b style="color: #22c3d9; font-size: 0.9rem; display: block;">弹窗</b>
+                                        </div>
+                                    </label>
+                                </div>
+                            </div>
+
+                            <div class="medium-3 columns" style="margin-bottom: 1rem;">
+                                <label style="font-size: 0.85rem; font-weight: 600; margin-bottom: 0.5rem; display: block;">❓ 是否上架</label>
+                                <div class="status-radio-flex-row" style="display: flex; gap: 1.5rem; flex-wrap: wrap; width: 100%;">
+                                    <label style="flex: 1; background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 8px; padding: 0.75rem 1rem; display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                                        <input type="radio" name="status" value="true" {% if goods.status == true %} checked {% endif %} style="margin: 0;">
+                                        <div>
+                                            <b style="color: #16a34a; font-size: 0.9rem; display: block;">🟢 上架</b>
+                                        </div>
+                                    </label>
+                                    <label style="flex: 1; background: #eff6ff; border: 1px solid #dbeafe; border-radius: 8px; padding: 0.75rem 1rem; display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                                        <input type="radio" name="status" value="false" {% if goods.status == false %} checked {% endif %} style="margin: 0;">
+                                        <div>
+                                            <b style="color: #2563eb; font-size: 0.9rem; display: block;">🔵 隐藏</b>
+                                        </div>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="manager-action-footer-row" style="display: flex; align-items: center; gap: 1rem;">
+                            <button type="submit" class="btn-manager-submit" style="background: linear-gradient(135deg, #00c6ff, #0072ff) !important; color: #ffffff !important; border: none !important; cursor: pointer !important; display: inline-flex !important; align-items: center !important; justify-content: center !important; height: 34px !important; padding: 0 2rem !important; border-radius: 17px !important; font-weight: 600 !important; font-size: 0.85rem !important; box-shadow: 0 4px 12px rgba(0, 114, 255, 0.25) !important; line-height: 1 !important; transition: all 0.2s ease !important;">
+                                提交
+                            </button>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- 📋 下架商品列表 -->
+                <div class="ladder-round-form">
+                    <div style="display: flex; align-items: center; gap: 1rem; flex-wrap: wrap; justify-content: space-between;">
+                        <h3 style="font-size: 1.1rem; font-weight: 700; color: #0072ff; display: flex; align-items: center; gap: 6px;">
+                            📋 下架商品列表
+                        </h3>
+                        <input type="text" id="hidden-goods-search" placeholder="🔍 搜索商品名称..." style="padding: 0.5rem; border-radius: 6px; border: 1px solid #cbd5e1;">
+                    </div>
+
+                    <div class="ladder-round-list">
+                        <div class="grid-container" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1rem; width: 100%;">
+                            {% if hiddenDocs.length > 0 %}
+                            {% for goods in hiddenDocs %}
+                            <div class="stage-grid-item hidden" style="border: 1px solid #e2e8f0; border-radius: 8px; padding: 1rem; margin-bottom: 0.75rem;">
+                                <div style="font-weight: 600; margin-bottom: 0.5rem;">
+                                    <strong>{{ goods.name }}</strong>
+                                    <span class="status-badge status-hidden">
+                                    🔵 隐藏
+                                    </span>
+                                </div>
+                                <div class="select-type" style="font-size: 0.85rem; margin: 0.5rem 0;">
+                                    单价：{{ goods.price }} 🪙 | 储量：{% if goods.amount > 0%}{{ goods.amount }}{% else %}∞{% endif %} 📦 | 销量：{{ goods.sale }}
+                                </div>
+                                <div class="stage-actions">
+                                    <!-- 编辑 -->
+                                    <form method="get" action="/goods/manage" style="display: inline-block;">
+                                    <input type="hidden" name="goodsId" value="{{ goods._id }}">
+                                    <input type="hidden" name="_csrf" value="{{ _csrf }}">
+                                    <button type="submit" class="btn-stage btn-edit">✏️ 编辑</button>
+                                    </form>
+
+                                    <form method="post" style="display: inline-block;">
+                                        <input type="hidden" name="_csrf" value="{{ _csrf }}">
+                                        <button type="button" class="btn-stage btn-enable" onclick="handlePublic('{{ goods._id }}')">✅ 上架</button>
+                                    </form>
+
+                                    <!-- 彻底删除 -->
+                                    <form method="post" style="display: inline-block;">
+                                    <input type="hidden" name="_csrf" value="{{ _csrf }}">
+                                    <button type="button" class="btn-stage btn-delete" onclick="handleDelete('{{ goods._id }}')">🗑️ 删除</button>
+                                    </form>
+                                </div>
+                            </div>
+                            {% endfor %}
+                            {% else %}
+                            <div class="no-data-placeholder" style="grid-column: 1 / -1; text-align: center; padding: 2rem; border-radius: 8px;">
+                            📭 暂无商品数据
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 📋 在售商品列表 -->
+                <div class="ladder-round-form">
+                    <div style="display: flex; align-items: center; gap: 1rem; flex-wrap: wrap; justify-content: space-between;">
+                        <h3 style="font-size: 1.1rem; font-weight: 700; color: #0072ff; display: flex; align-items: center; gap: 6px;">
+                            📋 在售商品列表
+                        </h3>
+                        <input type="text" id="public-goods-search" placeholder="🔍 搜索商品名称..." style="padding: 0.5rem; border-radius: 6px; border: 1px solid #cbd5e1;">
+                    </div>
+
+                    <div class="ladder-round-list">
+                        <div class="grid-container" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1rem; width: 100%;">
+                            {% if publicDocs.length > 0 %}
+                            {% for goods in publicDocs %}
+                            <div class="stage-grid-item active" style="border: 1px solid #e2e8f0; border-radius: 8px; padding: 1rem; margin-bottom: 0.75rem;">
+                                <div style="font-weight: 600; margin-bottom: 0.5rem;">
+                                    <strong>{{ goods.name }}</strong>
+                                    <span class="status-badge status-active">
+                                    🟢 启用
+                                    </span>
+                                </div>
+                                <div class="select-type" style="font-size: 0.85rem; margin: 0.5rem 0;">
+                                    单价：{{ goods.price }} 🪙 | 储量：{% if goods.amount > 0%}{{ goods.amount }}{% else %}∞{% endif %} 📦 | 销量：{{ goods.sale }}
+                                </div>
+                                <div class="stage-actions">
+                                    <form method="get" action="/goods/manage" style="display: inline-block;">
+                                    <input type="hidden" name="goodsId" value="{{ goods._id }}">
+                                    <input type="hidden" name="_csrf" value="{{ _csrf }}">
+                                    <button type="submit" class="btn-stage btn-edit">✏️ 编辑</button>
+                                    </form>
+
+                                    <form method="post" style="display: inline-block;">
+                                        <input type="hidden" name="_csrf" value="{{ _csrf }}">
+                                        <button type="button" class="btn-stage btn-disable" onclick="handleHidden('{{ goods._id }}')">❌ 下架</button>
+                                    </form>
+                                    
+                                    <form method="post" style="display: inline-block;">
+                                    <input type="hidden" name="_csrf" value="{{ _csrf }}">
+                                    <button type="button" class="btn-stage btn-delete" onclick="handleDelete('{{ goods._id }}')">🗑️ 删除</button>
+                                    </form>
+                                </div>
+                            </div>
+                            {% endfor %}
+                            {% else %}
+                            <div class="no-data-placeholder" style="grid-column: 1 / -1; text-align: center; padding: 2rem; border-radius: 8px;">
+                            📭 暂无商品数据
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const params = new URLSearchParams(window.location.search);
+    params.delete('_csrf');
+    const goodsId = params.get('goodsId');
+
+    if(goodsId) {
+        params.delete('goodsId');
+
+        const newUrl =
+        window.location.pathname +
+        (params.toString() ? `?${params.toString()}` : '');
+
+        window.history.replaceState({}, '', newUrl);  
+    }
+
+    // 搜索功能
+    document.getElementById('public-goods-search').addEventListener('input', function() {
+        const searchTerm = this.value.toLowerCase();
+        document.querySelectorAll('.stage-grid-item.active').forEach(item => {
+            const title = item.querySelector('strong').textContent.toLowerCase();
+            if (title.includes(searchTerm)) {
+                item.style.display = 'block';
+            } else {
+                item.style.display = 'none';
+            }
+        });
+    });
+
+    document.getElementById('hidden-goods-search').addEventListener('input', function() {
+        const searchTerm = this.value.toLowerCase();
+        document.querySelectorAll('.stage-grid-item.hidden').forEach(item => {
+            const title = item.querySelector('strong').textContent.toLowerCase();
+            if (title.includes(searchTerm)) {
+                item.style.display = 'block';
+            } else {
+                item.style.display = 'none';
+            }
+        });
+    });
+});
+
+function handlePublic(id) {
+    if (!confirm('确定要上架该商品吗？')) return;
+
+    fetch('/goods/manage', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            operation: 'publicGoods',
+            goodsId: id,
+        })
+    }).then(() => {
+        location.reload();
+    });
+}
+
+function handleHidden(id) {
+    if (!confirm('确定要下架该商品吗？')) return;
+
+    fetch('/goods/manage', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            operation: 'disableGoods',
+            goodsId: id,
+        })
+    }).then(() => {
+        location.reload();
+    });
+}
+
+function handleDelete(id) {
+    if (!confirm('确定要永久删除该商品吗？此操作不可恢复！')) return;
+
+    fetch('/goods/manage', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            operation: 'deleteGoods',
+            goodsId: id,
+        })
+    }).then(() => {
+        location.reload();
+    });
+}
+
+</script>
+{% endblock%}

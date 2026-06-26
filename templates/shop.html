@@ -1,0 +1,279 @@
+{% extends "layout/basic.html" %}
+
+{% block content %}
+<style>
+    /* ==================== 1. 商城主布局与网格排版 ==================== */
+    .shop-main-panel {
+        padding: 2rem !important;
+    }
+
+    /* 头部栏：Flex布局将主标题推左，钱包余额徽章推最右 */
+    .shop-panel__header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1.5rem;
+        padding-bottom: 1rem;
+        border-bottom: 1px solid var(--color-border, #e2e8f0);
+    }
+    .shop-panel__title {
+        font-size: 1.5rem;
+        font-weight: bold;
+        margin: 0 !important;
+        color: var(--color-text, #1e293b);
+    }
+
+    /* 右上角高级金币钱包徽章 */
+    .wallet-label {
+        font-size: 0.88rem;
+        font-weight: 500;
+    }
+    .wallet-balance-value {
+        font-size: 1.2rem;
+        font-weight: 900;
+        font-family: monospace, sans-serif;
+    }
+
+    /* 操作提示条 */
+    .shop-guide-bar {
+        font-size: 0.95rem;
+        margin-bottom: 2rem;
+    }
+    .guide-highlight { font-weight: 600; color: #0ea5e9; }
+
+    /* ==================== 2. 🛠️ 核心：三列响应式特权商品网格 ==================== */
+    .shop-goods-grid {
+        display: grid;
+        grid-template-columns: repeat(6, 1fr); /* 1:1 恢复一行三个最美大厅风格 */
+        gap: 1.5rem;
+        width: 100%;
+    }
+    @media (max-width: 1200px) { .shop-goods-grid { grid-template-columns: repeat(2, 1fr); } }
+    @media (max-width: 768px) { .shop-goods-grid { grid-template-columns: 1fr; } }
+
+    /* 单个特权商品卡片容器 */
+    .goods-card {
+        background-color: var(--color-bg-panel, #ffffff);
+        border: 1px solid var(--color-border, #e2e8f0);
+        border-radius: 10px;
+        padding: 1.5rem 0 0.5rem 0;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        min-height: 200px;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.01);
+        transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .goods-card:hover:not(.goods-card--disabled) {
+        transform: translateY(-2px);
+        border-color: #38bdf8;
+        box-shadow: 0 6px 16px rgba(56, 189, 248, 0.08);
+    }
+
+    .goods-card__title {
+        font-size: 1.08rem;
+        font-weight: bold;
+        color: var(--color-text, #1e293b);
+        margin: 0 !important;
+        line-height: 1.4;
+    }
+    .goods-card__desc {
+        font-size: 0.85rem;
+        line-height: 1.5;
+        color: var(--color-text-secondary, #64748b);
+        margin: 0 0 0.5rem 0 !important;
+    }
+
+    /* ==================== 3. 🎨 出口品类微章气泡标签颜色体系 ==================== */
+    .goods-category-tag {
+        align-self: flex-start;
+        font-size: 0.72rem;
+        font-weight: bold;
+        padding: 0.15rem 0.5rem;
+        border-radius: 4px;
+        letter-spacing: 0.5px;
+    }
+
+    /* 出口一：荣誉商城（高贵尊享紫） */
+    .tag--virtual { background-color: rgba(124, 58, 237, 0.1); color: #7c3aed; }
+    /* 出口三：教务管理联动（硬核活力橙） */
+    .tag--object { background-color: rgba(230, 126, 34, 0.1); color: #e67e22; }
+
+    /* 商城卡片页脚动作区 */
+    .goods-card__footer {
+        align-items: center;
+        padding: 10px;
+        border-top: 1px dashed var(--color-border, #e2e8f0);
+        margin-top: auto;
+    }
+    .goods-price {
+        font-size: 1.05rem;
+        font-weight: 800;
+        color: #e67e22;
+        font-family: monospace;
+    }
+
+    /* 立即兑换大按钮 */
+    .btn-exchange {
+        background-color: #0ea5e9;
+        color: #ffffff !important;
+        border: none;
+        padding: 0.5rem 1.1rem;
+        border-radius: 6px;
+        font-size: 0.85rem;
+        font-weight: 600;
+        cursor: pointer;
+        box-shadow: 0 2px 6px rgba(14, 165, 233, 0.15);
+        transition: all 0.2s ease;
+    }
+    .btn-exchange:hover:not([disabled]) {
+        background-color: #0284c7;
+        transform: translateY(-1px);
+    }
+
+    /* ==================== 4. 🔒 核心置灰：当钱包金币不足时的半透明高级磨砂蒙版 ==================== */
+    .goods-card.goods-card--disabled {
+        opacity: 0.45 !important;
+        cursor: not-allowed !important;
+        /* 在亮色和暗色模式下均自动触发轻微的系统级变暗/变淡，提示无法购买 */
+        background-color: var(--color-bg-block, rgba(0,0,0,0.01)) !important;
+        box-shadow: none !important;
+    }
+    .goods-card--disabled .btn-exchange {
+        background-color: var(--color-border, #cbd5e1) !important;
+        color: var(--color-text-secondary, #94a3b8) !important;
+        cursor: not-allowed !important;
+        box-shadow: none !important;
+    }
+
+    /* ==================== 5. 🌗 终极暗色适配补丁 ==================== */
+    html[data-mantine-color-scheme="dark"] .goods-card {
+        background-color: #1e1f22 !important; /* 1:1 对齐大厅的暗色电竞皮肤 */
+        border-color: #373a40 !important;
+    }
+
+    .status-badge {
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    font-size: 0.75rem;
+}
+
+.status-active { background: #dcfce7; color: #166534; }
+.status-disabled { background: #fee2e2; color: #991b1b; }
+</style>
+
+<div class="row shop-market-layout">
+    <div class="medium-12 columns">
+        <div class="section shop-main-panel">
+            
+            <!-- 头部栏：标题与当前用户的金币钱包余额看板 -->
+            <div class="shop-panel__header">
+                <h1 class="section__title shop-panel__title" style="display: flex; align-items: center !important;">🛒 神秘商店<p style="padding-left: 10px; color: #aebbd6; font-size: 1.1rem;">实物商品需找管理员核销，虚拟商品需要在背包中装配！</p></h1>
+                <div>
+                <a href="{{ url('coin_manage') }}" style="background: linear-gradient(135deg, #ff9900, #ff5500); color:#fff; text-decoration: none !important; display: inline-flex !important; align-items: center !important; justify-content: center !important; height: 34px !important; padding: 0 1.25rem !important; border-radius: 17px !important; font-weight: 600 !important; font-size: 0.85rem !important; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.25) !important; line-height: 1 !important; text-align: center !important; box-sizing: border-box !important; transition: all 0.2s ease !important;">
+                    <span class="wallet-label">背包&余额：</span>
+                    <span id="user-shop-balance" value="{{ ucoins.total }}" class="wallet-balance-value">🪙{{ ucoins.total }}</span>
+                </a>
+                {% if handler.user.hasPriv(PRIV.PRIV_MANAGE_ALL_DOMAIN) %}
+                    <a href="{{ url('goods_manage') }}" style="background: linear-gradient(135deg, #87f0db, #58cdb6); color:#fff; text-decoration: none !important; display: inline-flex !important; align-items: center !important; justify-content: center !important; height: 34px !important; padding: 0 1.25rem !important; border-radius: 17px !important; font-weight: 600 !important; font-size: 0.85rem !important; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.25) !important; line-height: 1 !important; text-align: center !important; box-sizing: border-box !important; transition: all 0.2s ease !important;">
+                        <span class="wallet-label">🎁 商品管理</span>
+                    </a>
+                    <a href="{{ url('bills_manage') }}" style="background: linear-gradient(135deg, #9cf087, #66cd58); color:#fff; text-decoration: none !important; display: inline-flex !important; align-items: center !important; justify-content: center !important; height: 34px !important; padding: 0 1.25rem !important; border-radius: 17px !important; font-weight: 600 !important; font-size: 0.85rem !important; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.25) !important; line-height: 1 !important; text-align: center !important; box-sizing: border-box !important; transition: all 0.2s ease !important;">
+                        <span class="wallet-label">✏️ 订单核销</span>
+                    </a>
+                {% endif %}
+                </div>
+            </div>
+            
+            {% if gdocs|length > 0 %}
+            <div class="shop-goods-grid">
+                {% for doc in gdocs %}
+                {% if not doc.description.includes("域") and doc.status %}
+                <div class="goods-card" data-cost="{{doc.price}}" data-name="{{doc.name}}">
+
+                    <div style="position: absolute;
+                        top: 10px; left: 10px;
+                        background: linear-gradient(90deg, #ff9a9e 0%, #fecfef 99%, #fecfef 100%);
+                        color: #fff;
+                        padding: 2px 8px;
+                        border-radius: 12px;
+                        font-size: 12px;
+                        font-weight: bold;
+                        z-index: 2;
+                        text-shadow: 0 1px 2px rgba(0,0,0,0.2);">
+                        {% if doc.type == 0 %}实物{% elif doc.type == 3 %}挂件{% else %}装饰{% endif %}
+                    </div>
+
+                    <div style="height: 120px;">
+                        <img
+                            src="{{doc.imageUrl}}"
+                            alt="{{doc.name}}"
+                            style="width: 100%; max-height: 120px; object-fit: cover; border-radius: 6px;"
+                            onerror="this.style.display='none'"
+                        >
+                    </div>
+                    
+                    <div class="goods-card__footer">
+                        <h3 class="goods-card__title">{{doc.name}}</h3>
+                        <p class="goods-card__desc">{{doc.description}}</p>
+                        <div style="display: flex; justify-content: space-between;">
+                            <span class="status-badge status-active">储量：{% if doc.amount > 0%}{{ doc.amount }}{% else %}∞{% endif %}</span>
+                            <span class="goods-limit status-badge status-disabled">🛒 {% if doc.limit != 0 %}限购 {{doc.limit}}{% else %}不限购{% endif %}</span>
+                        </div>
+                    
+                        <div style="margin-top: 15px; display: flex; justify-content: space-between; align-items: center;">
+                            <span class="goods-price">🪙{{doc.price}}</span>
+                            <input type="hidden" name="_csrf" value="{{ _csrf }}">
+                            <button type="submit" class="btn-exchange" onclick="handlePurchase('{{ doc._id }}')">兑换</button>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+                {% endfor %}
+            </div>
+            {% else %}
+                <div class="empty-lobby-box" style="border-radius: 10px; padding: 4rem 1rem; text-align: center; border: 1px solid #e2e8f0; color: #94a3b8; box-shadow: 0 2px 12px rgba(0,0,0,0.01);">
+                    <span style="font-size: 3rem; display: block; margin-bottom: 0.75rem;">📭</span>
+                    <div style="font-size: 1.05rem; font-weight: 600; color: #64748b; margin-bottom: 0.25rem;">暂无商品数据</div>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<script>
+async function handlePurchase(id) {
+    if (!confirm(`您确定要兑换该商品吗？\n兑换后将从您的钱包中扣除对应余额。`)) return;
+
+    try {
+        const response = await fetch('/shop', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                operation: 'purchaseGoods',
+                goodsId: id,
+            })
+        });
+
+        // 解析 JSON
+        const data = await response.json();
+
+        if (data.success) {
+            // ✅ 成功
+            alert(data.message || "🎉 兑换成功！");
+            location.reload(); // 刷新页面更新余额和库存
+        } else {
+            // ❌ 业务逻辑错误 (如余额不足)
+            alert("兑换失败：" + (data.message || "未知原因"));
+        }
+
+    } catch (error) {
+        // ❌ 网络错误或 JSON 解析错误
+        console.error(error);
+        alert("网络请求出错，请稍后再试");
+    }
+}
+</script>
+{% endblock %}

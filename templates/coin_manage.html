@@ -1,0 +1,535 @@
+{% extends "layout/basic.html" %}
+{% import "components/paginator.html" as paginator with context %}
+{% block content %}
+<style>
+.ladder-round-form {
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    padding: 1.5rem;
+    margin-top: 1rem;
+}
+
+.report-cards {
+    display: flex;
+    gap: 12px;
+}
+
+.card {
+    flex: 1;
+    padding: 12px;
+    border-radius: 10px;
+    text-align: center;
+    color: #fff;
+}
+
+.card .label {
+    font-size: 12px;
+    opacity: 0.9;
+}
+
+.card .value {
+    font-size: 22px;
+    font-weight: bold;
+    margin-top: 5px;
+}
+
+.card.first { background: #409eff; }
+.card.second { background: #67c23a; }
+.card.third { background: #f56c6c; }
+.card.forth { background: #f56ce5; }
+
+/* 新增：表格外层包裹容器，防止渲染偏移 */
+.ranking-table-container {
+    position: relative;
+    overflow-x: auto;
+    overflow-y: visible;
+    width: 100%;
+}
+
+/* 确保表格不会产生意外的定位上下文 */
+.ranking-table {
+    width: 100% !important;
+    border-collapse: collapse !important;
+    table-layout: auto !important;
+    position: relative !important;
+    top: 0 !important;
+    margin-top: 0 !important;
+}
+
+/* 关键修复：防止表格行产生定位偏移 */
+.ranking-table tbody tr {
+    position: relative !important;
+    top: 0 !important;
+}
+
+/* 强制表头行使用标准定位 */
+.ranking-table thead tr {
+    position: static !important;
+    top: auto !important;
+}
+
+/* 2. 表格全局统一样式：彻底消除竖线和杂乱底色 */
+table.ranking-table {
+    width: 100% !important;
+    border-collapse: collapse !important;
+}
+
+table.ranking-table tbody tr td {
+    padding: 14px 16px !important; /* 调大上下间距，更具有高级呼吸感 */
+    border-bottom: 1px solid #f1f5f9 !important; /* 极轻量的横向行底边框 */
+    border-right: none !important;
+    border-top: none !important;
+    border-left: none !important;
+    vertical-align: middle !important;
+    font-size: 14px;
+}
+
+/* 3. 完美复刻比赛页：实现两端横向完全冲满的淡灰色表头 */
+table.ranking-table thead th {
+    padding: 12px 16px !important;
+    color: #475569 !important; /* 调深表头颜色，配合加粗显质感 */
+    font-size: 13px !important;
+    font-weight: 700 !important; /* ⚡ 强制字重拉满，加粗表头字体 */
+    border-bottom: 1px solid #e2e8f0 !important;
+    border-right: none !important;
+    border-top: none !important;
+    border-left: none !important;
+}
+
+table.ranking-table th.col--user,
+table.ranking-table td.col--user {
+    width: auto !important; /* 用户名主列自动拉伸，留出宽裕空间 */
+    text-align: left !important;
+}
+
+table.ranking-table th.col--user,
+table.ranking-table td.col--user {
+    width: auto !important; /* 用户名主列独享弹性拉伸区间 */
+    text-align: left !important; /* 用户名保持左对齐 */
+}
+
+/* ⚡ 核心改动：右侧 4 列硬性数据全部强行向右看齐 (text-align: right) */
+table.ranking-table th.col--total-rp,
+table.ranking-table td.col--total-rp,
+table.ranking-table th.col--ac-count,
+table.ranking-table td.col--ac-count {
+    width: 130px !important;
+    min-width: 130px !important;
+    text-align: center !important; /* ⚡ 所有的积分和通过数展示全部靠右 */
+}
+
+/* ⚡ 细节优化：让最右侧的最后一列增加右侧 padding，防止文字死贴卡片边框 */
+table.ranking-table th.col--ac-count,
+table.ranking-table td.col--ac-count {
+    padding-right: 24px !important; 
+}
+
+.btn-stage {
+    height: 28px;
+    padding: 0 0.75rem;
+    font-size: 0.75rem;
+    border-radius: 6px;
+    border: 1px solid;
+    cursor: pointer;
+}
+
+.btn-enable { background: #f0fdf4; color: #16a34a; border-color: #bbf7d0; }
+
+/* ==================== 2. 🛠️ 核心：三列响应式特权商品网格 ==================== */
+    .shop-goods-grid {
+        display: grid;
+        grid-template-columns: repeat(6, 1fr); /* 1:1 恢复一行三个最美大厅风格 */
+        gap: 1.5rem;
+        width: 100%;
+    }
+    @media (max-width: 1200px) { .shop-goods-grid { grid-template-columns: repeat(2, 1fr); } }
+    @media (max-width: 768px) { .shop-goods-grid { grid-template-columns: 1fr; } }
+
+    /* 单个特权商品卡片容器 */
+    .goods-card {
+        background-color: var(--color-bg-panel, #ffffff);
+        border: 1px solid var(--color-border, #e2e8f0);
+        border-radius: 10px;
+        padding: 1.5rem 0 0.5rem 0;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        min-height: 200px;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.01);
+        transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .goods-card:hover:not(.goods-card--disabled) {
+        transform: translateY(-2px);
+        border-color: #38bdf8;
+        box-shadow: 0 6px 16px rgba(56, 189, 248, 0.08);
+    }
+
+    .goods-card__title {
+        font-size: 1.08rem;
+        font-weight: bold;
+        color: var(--color-text, #1e293b);
+        margin: 0 !important;
+        line-height: 1.4;
+    }
+    .goods-card__desc {
+        font-size: 0.85rem;
+        line-height: 1.5;
+        color: var(--color-text-secondary, #64748b);
+        margin: 0 0 0.5rem 0 !important;
+    }
+
+    /* ==================== 3. 🎨 出口品类微章气泡标签颜色体系 ==================== */
+    .goods-category-tag {
+        align-self: flex-start;
+        font-size: 0.72rem;
+        font-weight: bold;
+        padding: 0.15rem 0.5rem;
+        border-radius: 4px;
+        letter-spacing: 0.5px;
+    }
+
+    /* 出口一：荣誉商城（高贵尊享紫） */
+    .tag--virtual { background-color: rgba(124, 58, 237, 0.1); color: #7c3aed; }
+    /* 出口三：教务管理联动（硬核活力橙） */
+    .tag--object { background-color: rgba(230, 126, 34, 0.1); color: #e67e22; }
+
+    /* 商城卡片页脚动作区 */
+    .goods-card__footer {
+        align-items: center;
+        padding: 10px;
+        border-top: 1px dashed var(--color-border, #e2e8f0);
+        margin-top: auto;
+    }
+    .goods-price {
+        font-size: 1.05rem;
+        font-weight: 800;
+        color: #e67e22;
+        font-family: monospace;
+    }
+
+    /* 立即兑换大按钮 */
+    .btn-exchange {
+        background-color: #0ea5e9;
+        color: #ffffff !important;
+        border: none;
+        padding: 0.5rem 1.1rem;
+        border-radius: 6px;
+        font-size: 0.85rem;
+        font-weight: 600;
+        cursor: pointer;
+        box-shadow: 0 2px 6px rgba(14, 165, 233, 0.15);
+        transition: all 0.2s ease;
+    }
+    .btn-exchange:hover:not([disabled]) {
+        background-color: #0284c7;
+        transform: translateY(-1px);
+    }
+
+    .btn-exchange-disable {
+        background-color: #e97c0ed3;
+        color: #ffffff !important;
+        border: none;
+        padding: 0.5rem 1.1rem;
+        border-radius: 6px;
+        font-size: 0.85rem;
+        font-weight: 600;
+        cursor: pointer;
+        box-shadow: 0 2px 6px rgba(233, 131, 14, 0.15);
+        transition: all 0.2s ease;
+    }
+    .btn-exchange-disable:hover:not([disabled]) {
+        background-color: #c77b02;
+        transform: translateY(-1px);
+    }
+
+    /* ==================== 5. 🌗 终极暗色适配补丁 ==================== */
+    html[data-mantine-color-scheme="dark"] .goods-card {
+        background-color: #1e1f22 !important; /* 1:1 对齐大厅的暗色电竞皮肤 */
+        border-color: #373a40 !important;
+    }
+
+</style>
+
+<div class="row">
+    <div class="medium-12 columns">
+        <div id="tab-ladder" class="tab-content">
+            <div class="section manager-main-panel" style="border-radius: 12px; padding: 2rem; box-shadow: 0 4px 20px rgba(0,0,0,0.05);">
+                <div class="manager-header" style="border-bottom: 1px solid #e2e8f0; padding-bottom: 1rem; margin-bottom: 2rem; display: flex; justify-content: space-between; align-items: center;">
+                    <h1 style="font-size: 1.4rem !important; font-weight: 700 !important; display: inline-flex; align-items: center; gap: 8px; margin: 0;">
+                    🪙 我的钱包&背包
+                    </h1>
+                    <div>
+                    <a href="/shop" class="btn-lobby-action" style="background: linear-gradient(135deg, #ff9900, #ff5500); color:#fff; text-decoration: none !important; display: inline-flex !important; align-items: center !important; justify-content: center !important; height: 34px !important; padding: 0 1.25rem !important; border-radius: 17px !important; font-weight: 600 !important; font-size: 0.85rem !important; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.25) !important; line-height: 1 !important; text-align: center !important; box-sizing: border-box !important; transition: all 0.2s ease !important;">
+                        🛒 神秘商店
+                    </a>
+                    {% if handler.user.hasPriv(PRIV.PRIV_MANAGE_ALL_DOMAIN) %}
+                    <a href="{{ url('goods_manage') }}" style="background: linear-gradient(135deg, #87f0db, #58cdb6); color:#fff; text-decoration: none !important; display: inline-flex !important; align-items: center !important; justify-content: center !important; height: 34px !important; padding: 0 1.25rem !important; border-radius: 17px !important; font-weight: 600 !important; font-size: 0.85rem !important; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.25) !important; line-height: 1 !important; text-align: center !important; box-sizing: border-box !important; transition: all 0.2s ease !important;">
+                        <span class="wallet-label">🎁 商品管理</span>
+                    </a>
+                    <a href="{{ url('bills_manage') }}" style="background: linear-gradient(135deg, #9cf087, #66cd58); color:#fff; text-decoration: none !important; display: inline-flex !important; align-items: center !important; justify-content: center !important; height: 34px !important; padding: 0 1.25rem !important; border-radius: 17px !important; font-weight: 600 !important; font-size: 0.85rem !important; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.25) !important; line-height: 1 !important; text-align: center !important; box-sizing: border-box !important; transition: all 0.2s ease !important;">
+                        <span class="wallet-label">✏️ 订单核销</span>
+                    </a>
+                    {% endif %}
+                    </div>
+                </div>
+                <div class="ladder-round-form">
+                    <h3 style="font-size: 1.1rem; font-weight: 700; color: #0072ff; margin: 0 0 1.25rem 0; display: flex; align-items: center; gap: 6px;">
+                        💳 我的余额：{{ ucoins.total | default(0) }}
+                    </h3>
+                    <div class="report-cards">
+
+                        <div class="card second">
+                            <div class="label">刷题所得</div>
+                            <div class="value">{{ ucoins.problems | default(0) }}</div>
+                        </div>
+
+                        <div class="card first">
+                            <div class="label">竞技所得</div>
+                            <div class="value">{{ ucoins.stages | default(0) }}</div>
+                        </div>
+
+                        <div class="card third">
+                            <div class="label">打卡所得</div>
+                            <div class="value">{{ ucoins.checkin | default(0) }}</div>
+                        </div>
+
+                        <div class="card forth">
+                            <div class="label">额外奖励</div>
+                            <div class="value">{{ ucoins.bonus | default(0) }}</div>
+                        </div>
+
+                    </div>
+                </div>
+                <div class="ladder-round-form">
+                    <div style="display: flex; align-items: center; gap: 1rem; flex-wrap: wrap; justify-content: space-between; margin-bottom: 15px;">
+                        <h3 style="font-size: 1.1rem; font-weight: 700; color: #0072ff; margin: 0 0 1.25rem 0; display: flex; align-items: center; gap: 6px;">
+                            🎒 我的背包<p style="padding-left: 10px; color: #aebbd6; font-size: 0.9rem;">同类型虚拟商品只能装配一个，切换之前请先取消同类型中已经装配的商品！</p>
+                        </h3>
+                        <input type="text" id="bags-search" placeholder="🔍 搜索商品（名称）..." style="padding: 0.5rem; border-radius: 6px; border: 1px solid #cbd5e1;">
+                    </div>
+                    {% if bagdocs|length > 0 %}
+                    <div class="shop-goods-grid">
+                        {% for doc in bagdocs %}
+                        {% if doc.type != 1 and doc.goodsInfo.status %}
+                        <div class="goods-card" data-cost="{{doc.goodsInfo.price}}" data-name="{{doc.goodsInfo.name}}">
+
+                            <div style="position: absolute;
+                                top: 10px; left: 10px;
+                                background: linear-gradient(90deg, #ff9a9e 0%, #fecfef 99%, #fecfef 100%);
+                                color: #fff;
+                                padding: 2px 8px;
+                                border-radius: 12px;
+                                font-size: 12px;
+                                font-weight: bold;
+                                z-index: 2;
+                                text-shadow: 0 1px 2px rgba(0,0,0,0.2);">
+                                {% if doc.goodsInfo.type == 0 %}实物{% elif doc.goodsInfo.type == 3 %}挂件{% else %}装饰{% endif %}
+                            </div>
+
+                            <div style="height: 120px;">
+                                <img
+                                    src="{{doc.goodsInfo.imageUrl}}"
+                                    alt="{{doc.goodsInfo.name}}"
+                                    style="width: 100%; max-height: 120px; object-fit: cover; border-radius: 6px;"
+                                    onerror="this.style.display='none'"
+                                >
+                            </div>
+                            
+                            <div class="goods-card__footer">
+                                <h3 class="goods-card__title">{{doc.goodsInfo.name}}</h3>
+                                <p class="goods-card__desc">{{doc.goodsInfo.description}}</p>
+
+                                {% if doc.type != 0 %}
+                                    {% if not doc.loaded %}
+                                    <div style="margin-top: 15px;">
+                                        <input type="hidden" name="_csrf" value="{{ _csrf }}">
+                                        <button type="submit" class="btn-exchange" onclick="handleLoaded('{{ doc.goodsInfo._id }}')" style="width: 100%;">立即装配</button>
+                                    </div>
+                                    {% else %}
+                                    <div style="margin-top: 15px;">
+                                        <input type="hidden" name="_csrf" value="{{ _csrf }}">
+                                        <button type="submit" class="btn-exchange-disable" onclick="handleUnload('{{ doc.goodsInfo._id }}')" style="width: 100%;">取消装配</button>
+                                    </div>
+                                    {% endif %}
+                                {% endif %}
+                            </div>
+                        </div>
+                        {% endif %}
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                        <div class="empty-lobby-box" style="border-radius: 10px; padding: 4rem 1rem; text-align: center; border: 1px solid #e2e8f0; color: #94a3b8; box-shadow: 0 2px 12px rgba(0,0,0,0.01);">
+                            <span style="font-size: 3rem; display: block; margin-bottom: 0.75rem;">📭</span>
+                            <div style="font-size: 1.05rem; font-weight: 600; color: #64748b; margin-bottom: 0.25rem;">背包空空如也</div>
+                        </div>
+                    {% endif %}
+                </div>
+                
+                <div class="ladder-round-form">
+                    <h3 style="font-size: 1.1rem; font-weight: 700; color: #0072ff; margin: 0 0 1.25rem 0; display: flex; align-items: center; gap: 6px;">
+                        💰 金币榜单
+                    </h3>
+                    <div data-fragment-id="ranking">
+                    {% if not udocs.length %}
+                        <div class="no-data-placeholder" style="grid-column: 1 / -1; text-align: center; padding: 2rem; border-radius: 8px;">
+                        📭 暂无榜单数据
+                        </div>
+                    {% else %}
+                    
+                    <!-- ⚡ 核心改造：扩展为 6 列的现代化终极天梯榜 -->
+                    <table class="data-table ranking-table">
+                        <thead>
+                        <tr>
+                            <th class="col--user">{{ _('Username') }}</th>
+                            <th class="col--total-rp">余额</th>
+                            <th class="col--ac-count">刷题所得</th>
+                            <th class="col--ac-count">竞技所得</th>
+                            <th class="col--ac-count">打卡所得</th>
+                            <th class="col--ac-count">额外所得</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        {%- for udoc in udocs -%}
+                        <tr>
+                            <td class="col--user">
+                                <img class="small user-profile-avatar v-center" loading="lazy" src="{{ avatarUrl(udoc.playerInfo.avatar|default('')) }}" width="20" height="20">
+                                <a class="user-profile-name uname--lv{{ udoc.playerInfo.level|default(0) }}" href="{{ url('user_detail', uid=udoc.playerInfo._id) }}">
+                                    {% if handler.user.hasPerm(perm.PERM_VIEW_USER_PRIVATE_INFO) and udoc.playerInfo.displayName and udoc.playerInfo.displayName != udoc.playerInfo.uname %}
+                                    {{ udoc.playerInfo.displayName }} ({{ udoc.playerInfo.uname }})
+                                    {% else %}
+                                    {{ udoc.playerInfo.uname }}
+                                    {% endif %}
+                                </a>
+                            </td>
+                            <td class="col--total-rp" style="font-weight: bold; color: #3b82f6;">{{ udoc.total|default(0) }}</td>
+                            <td class="col--ac-count" style="font-weight: 600; color: #16a34a;">{{ udoc.problems|default(0) }}</td>
+                            <td class="col--ac-count" style="font-weight: 600; color: #16a34a;">{{ udoc.stages|default(0) }}</td>
+                            <td class="col--ac-count" style="font-weight: 600; color: #16a34a;">{{ udoc.checkin|default(0) }}</td>
+                            <td class="col--ac-count" style="font-weight: 600; color: #16a34a;">{{ udoc.bonus|default(0) }}</td>
+                        </tr>
+                        {%- endfor -%}
+                        </tbody>
+                    </table>
+                    {{ paginator.render(page, upcount) }}
+                    {% endif %}
+                    </div>
+                </div>
+
+                <div class="ladder-round-form">
+                    <div style="display: flex; align-items: center; gap: 1rem; flex-wrap: wrap; justify-content: space-between;">
+                        <h3 style="font-size: 1.1rem; font-weight: 700; color: #0072ff; display: flex; align-items: center; gap: 6px;">
+                            📋 我的账单
+                        </h3>
+                        <input type="text" id="bills-search" placeholder="🔍 搜索账单（附加信息）..." style="padding: 0.5rem; border-radius: 6px; border: 1px solid #cbd5e1;">
+                    </div>
+                    <table class="ladder-rank-table" style="width: 100%; border-collapse: collapse; font-size: 0.9rem; flex-grow: 1; border-top: 1px solid #e2e8f0; margin-top: 10px;">
+                        <thead>
+                            <tr style="border-bottom: 2px solid #e2e8f0; font-weight: 600; text-align: left;">
+                                <th style="width:200px; padding: 8px 10px; text-align: center;">账单日期</th>
+                                <th style="padding: 8px 10px;">附加信息</th>
+                                <th style="width:200px; padding: 8px 10px; text-align: center;">账单金额</th>
+                                <th style="width:200px; padding: 8px 10px; text-align: center;">状态</th>
+                                <th style="width:200px; padding: 8px 10px; text-align: center;">操作员</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% if bdocs|length > 0 %}
+                                {%- for bdoc in bdocs -%}
+                                <tr class="bills-item">
+                                    <td style="width:200px; padding: 8px 10px; text-align: center;">
+                                        {{ datetimeSpan(bdoc['createAt'], false, 'YYYY-MM-DD HH:mm:ss')|safe }}
+                                    </td>
+                                    <td style="padding: 8px 10px;">
+                                        <strong>{{ bdoc.content }}</strong>
+                                    </td>
+                                    <td style="width:200px; padding: 8px 10px; text-align: center;">
+                                        {{ bdoc.coins }}
+                                    </td>
+                                    <td style="width:200px; padding: 8px 10px; text-align: center;">
+                                        {% if bdoc.check == 1 %}
+                                            <p style="color: green;">已核销</p>
+                                        {% elif bdoc.check == 0 %}
+                                            <p style="color: red;">待核销</p>
+                                        {% elif bdoc.check == 2 %}
+                                            <p>无需核销</p>
+                                        {% endif %}
+                                    </td>
+                                    <td style="width:200px; padding: 8px 10px; text-align: center;">
+                                        {{ bdoc.playerName }}
+                                    </td>
+                                </tr>
+                                {%- endfor -%}
+                            {% else %}
+                                <tr>
+                                    <td colspan="4" style="grid-column: 1 / -1; text-align: center; padding: 2rem; border-radius: 8px;">📭 暂无账单数据</td>
+                                </tr>
+                            {% endif %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // 搜索功能
+    document.getElementById('bills-search').addEventListener('input', function() {
+        const searchTerm = this.value.toLowerCase();
+        document.querySelectorAll('.bills-item').forEach(item => {
+            const title = item.querySelector('strong').textContent.toLowerCase();
+            if (title.includes(searchTerm)) {
+                item.style.display = 'table-row';
+            } else {
+                item.style.display = 'none';
+            }
+        });
+    });
+
+    document.getElementById('bags-search').addEventListener('input', function() {
+        const searchTerm = this.value.toLowerCase();
+        document.querySelectorAll('.goods-card').forEach(item => {
+            const title = item.querySelector('h3').textContent.toLowerCase();
+            if (title.includes(searchTerm)) {
+                item.style.display = 'flex';
+            } else {
+                item.style.display = 'none';
+            }
+        });
+    });
+});
+
+function handleLoaded(id) {
+    fetch('/coin/manage', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            operation: 'loadedGoods',
+            goodsId: id,
+        })
+    }).then(() => {
+        location.reload();
+    });
+}
+
+function handleUnload(id) {
+    if (!confirm('确定要取消装配该商品吗？')) return;
+
+    fetch('/coin/manage', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            operation: 'unloadGoods',
+            goodsId: id,
+        })
+    }).then(() => {
+        location.reload();
+    });
+}
+
+</script>
+{% endblock%}

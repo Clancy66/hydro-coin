@@ -1,0 +1,357 @@
+{% extends "layout/basic.html" %}
+{% import "components/paginator.html" as paginator with context %}
+{% block content %}
+<style>
+.ladder-round-form {
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    padding: 1.5rem;
+    margin-top: 1rem;
+}
+
+.report-cards {
+    display: flex;
+    gap: 12px;
+}
+
+.card {
+    flex: 1;
+    padding: 12px;
+    border-radius: 10px;
+    text-align: center;
+    color: #fff;
+}
+
+.card .label {
+    font-size: 12px;
+    opacity: 0.9;
+}
+
+.card .value {
+    font-size: 22px;
+    font-weight: bold;
+    margin-top: 5px;
+}
+
+.card.first { background: #409eff; }
+.card.second { background: #67c23a; }
+.card.third { background: #f56c6c; }
+.card.forth { background: #f56ce5; }
+
+/* 新增：表格外层包裹容器，防止渲染偏移 */
+.ranking-table-container {
+    position: relative;
+    overflow-x: auto;
+    overflow-y: visible;
+    width: 100%;
+}
+
+/* 确保表格不会产生意外的定位上下文 */
+.ranking-table {
+    width: 100% !important;
+    border-collapse: collapse !important;
+    table-layout: auto !important;
+    position: relative !important;
+    top: 0 !important;
+    margin-top: 0 !important;
+}
+
+/* 关键修复：防止表格行产生定位偏移 */
+.ranking-table tbody tr {
+    position: relative !important;
+    top: 0 !important;
+}
+
+/* 强制表头行使用标准定位 */
+.ranking-table thead tr {
+    position: static !important;
+    top: auto !important;
+}
+
+/* 2. 表格全局统一样式：彻底消除竖线和杂乱底色 */
+table.ranking-table {
+    width: 100% !important;
+    border-collapse: collapse !important;
+}
+
+table.ranking-table tbody tr td {
+    padding: 14px 16px !important; /* 调大上下间距，更具有高级呼吸感 */
+    border-bottom: 1px solid #f1f5f9 !important; /* 极轻量的横向行底边框 */
+    border-right: none !important;
+    border-top: none !important;
+    border-left: none !important;
+    vertical-align: middle !important;
+    font-size: 14px;
+}
+
+/* 3. 完美复刻比赛页：实现两端横向完全冲满的淡灰色表头 */
+table.ranking-table thead th {
+    padding: 12px 16px !important;
+    color: #475569 !important; /* 调深表头颜色，配合加粗显质感 */
+    font-size: 13px !important;
+    font-weight: 700 !important; /* ⚡ 强制字重拉满，加粗表头字体 */
+    border-bottom: 1px solid #e2e8f0 !important;
+    border-right: none !important;
+    border-top: none !important;
+    border-left: none !important;
+}
+
+table.ranking-table th.col--user,
+table.ranking-table td.col--user {
+    width: auto !important; /* 用户名主列自动拉伸，留出宽裕空间 */
+    text-align: left !important;
+}
+
+table.ranking-table th.col--user,
+table.ranking-table td.col--user {
+    width: auto !important; /* 用户名主列独享弹性拉伸区间 */
+    text-align: left !important; /* 用户名保持左对齐 */
+}
+
+/* ⚡ 核心改动：右侧 4 列硬性数据全部强行向右看齐 (text-align: right) */
+table.ranking-table th.col--total-rp,
+table.ranking-table td.col--total-rp,
+table.ranking-table th.col--ac-count,
+table.ranking-table td.col--ac-count {
+    width: 130px !important;
+    min-width: 130px !important;
+    text-align: center !important; /* ⚡ 所有的积分和通过数展示全部靠右 */
+}
+
+/* ⚡ 细节优化：让最右侧的最后一列增加右侧 padding，防止文字死贴卡片边框 */
+table.ranking-table th.col--ac-count,
+table.ranking-table td.col--ac-count {
+    padding-right: 24px !important; 
+}
+
+/***** 徽章样式 *********/
+.ranking-table td.col--user .user-profile-badge,
+.ranking-table td.col--user span:not(.user-profile-link) {
+    display: inline-block !important;
+    padding: 4px 12px !important;
+    border-radius: 999px !important;
+    font-size: 11px !important;
+    font-weight: 700 !important;
+    color: white !important;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15), 0 1px 2px rgba(0, 0, 0, 0.1) !important;
+    text-shadow: 0 1px 1px rgba(0, 0, 0, 0.2) !important;
+    margin-left: 8px !important;
+    vertical-align: middle !important;
+}
+
+.btn-stage {
+    height: 28px;
+    padding: 0 0.75rem;
+    font-size: 0.75rem;
+    border-radius: 6px;
+    border: 1px solid;
+    cursor: pointer;
+}
+
+.btn-enable { background: #f0fdf4; color: #16a34a; border-color: #bbf7d0; }
+
+</style>
+
+<div class="row">
+    <div class="medium-12 columns">
+        <div id="tab-ladder" class="tab-content">
+            <div class="section manager-main-panel" style="border-radius: 12px; padding: 2rem; box-shadow: 0 4px 20px rgba(0,0,0,0.05);">
+                <div class="manager-header" style="border-bottom: 1px solid #e2e8f0; padding-bottom: 1rem; margin-bottom: 2rem; display: flex; justify-content: space-between; align-items: center;">
+                    <h1 style="font-size: 1.4rem !important; font-weight: 700 !important; display: inline-flex; align-items: center; gap: 8px; margin: 0;">
+                    ✏️ 奖励&订单核销
+                    </h1>
+                    <div>
+                    <a href="/shop" class="btn-lobby-action" style="background: linear-gradient(135deg, #ff9900, #ff5500); color:#fff; text-decoration: none !important; display: inline-flex !important; align-items: center !important; justify-content: center !important; height: 34px !important; padding: 0 1.25rem !important; border-radius: 17px !important; font-weight: 600 !important; font-size: 0.85rem !important; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.25) !important; line-height: 1 !important; text-align: center !important; box-sizing: border-box !important; transition: all 0.2s ease !important;">
+                        🛒 神秘商店
+                    </a>
+                    <a href="{{ url('coin_manage') }}" style="background: linear-gradient(135deg, #87f0db, #58cdb6); color:#fff; text-decoration: none !important; display: inline-flex !important; align-items: center !important; justify-content: center !important; height: 34px !important; padding: 0 1.25rem !important; border-radius: 17px !important; font-weight: 600 !important; font-size: 0.85rem !important; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.25) !important; line-height: 1 !important; text-align: center !important; box-sizing: border-box !important; transition: all 0.2s ease !important;">
+                        <span class="wallet-label">🪙 钱包&背包</span>
+                    </a>
+                    <a href="{{ url('goods_manage') }}" style="background: linear-gradient(135deg, #87f0db, #58cdb6); color:#fff; text-decoration: none !important; display: inline-flex !important; align-items: center !important; justify-content: center !important; height: 34px !important; padding: 0 1.25rem !important; border-radius: 17px !important; font-weight: 600 !important; font-size: 0.85rem !important; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.25) !important; line-height: 1 !important; text-align: center !important; box-sizing: border-box !important; transition: all 0.2s ease !important;">
+                        <span class="wallet-label">🎁 商品管理</span>
+                    </a>
+                    </div>
+                </div>
+
+                <div class="ladder-round-form">
+                    <h3 style="font-size: 1.1rem; font-weight: 700; color: #0072ff; margin: 0 0 1.25rem 0; display: flex; align-items: center; gap: 6px;">
+                        💰 金币奖励 / 扣除
+                    </h3>
+                    <form method="post" action="" style="display: block; margin: 0; padding: 0;">
+                        <input type="hidden" name="csrfToken" value="{{ _csrf }}"> <!-- 注意：后端期望的是 csrfToken -->
+                        <input type="hidden" name="operation" value="incCoins"> <!-- ✅ 添加操作标识 -->
+                        <div class="row">
+                            <div class="medium-4 columns" style="margin-bottom: 1rem;">
+                                <label style="font-size: 0.85rem; font-weight: 600; margin-bottom: 0.5rem; display: block;">👤 用户名 / UID</label>
+                                <input type="text" name="uidOrName" required style="height: 38px; border-radius: 6px; border: 1px solid #cbd5e1; padding: 0 12px; width: 100%; box-sizing: border-box; font-size: 0.95rem;">
+                            </div>
+
+                            <div class="medium-4 columns" style="margin-bottom: 1rem;">
+                                <label style="font-size: 0.85rem; font-weight: 600; margin-bottom: 0.5rem; display: block;">🪙 奖励数量（负数即为扣除）</label>
+                                <input type="text" name="coins" placeholder="3" required style="height: 38px; border-radius: 6px; border: 1px solid #cbd5e1; padding: 0 10px; width: 100%; box-sizing: border-box;">
+                            </div>
+
+                            <div class="medium-4 columns" style="margin-bottom: 1rem;">
+                                <label style="font-size: 0.85rem; font-weight: 600; margin-bottom: 0.5rem; display: block;">ℹ️ 奖励 / 扣除原因</label>
+                                <input type="text" name="content" placeholder="作业全完成" required style="height: 38px; border-radius: 6px; border: 1px solid #cbd5e1; padding: 0 10px; width: 100%; box-sizing: border-box;">
+                            </div>
+                        </div>
+                        
+                        <div class="manager-action-footer-row" style="display: flex; align-items: center; gap: 1rem;">
+                            <button type="submit" class="btn-manager-submit" style="background: linear-gradient(135deg, #00c6ff, #0072ff) !important; color: #ffffff !important; border: none !important; cursor: pointer !important; display: inline-flex !important; align-items: center !important; justify-content: center !important; height: 34px !important; padding: 0 2rem !important; border-radius: 17px !important; font-weight: 600 !important; font-size: 0.85rem !important; box-shadow: 0 4px 12px rgba(0, 114, 255, 0.25) !important; line-height: 1 !important; transition: all 0.2s ease !important;">
+                                提交
+                            </button>
+                        </div>
+                    </form>
+                </div>
+
+                <div class="ladder-round-form">
+                    <script>
+                    document.addEventListener('DOMContentLoaded', function() {
+                        // 搜索功能
+                        document.getElementById('check-bills-search').addEventListener('input', function() {
+                            const searchTerm = this.value.toLowerCase();
+                            document.querySelectorAll('.check-bills-item').forEach(item => {
+                                const title = item.querySelector('strong').textContent.toLowerCase();
+                                if (title.includes(searchTerm)) {
+                                    item.style.display = 'table-row';
+                                } else {
+                                    item.style.display = 'none';
+                                }
+                            });
+                        });
+                    });
+                    </script>
+                    <div style="display: flex; align-items: center; gap: 1rem; flex-wrap: wrap; justify-content: space-between;">
+                        <h3 style="font-size: 1.1rem; font-weight: 700; color: #0072ff; display: flex; align-items: center; gap: 6px;">
+                            📋 待核销订单
+                        </h3>
+                        <input type="text" id="check-bills-search" placeholder="🔍 搜索订单（附加信息）..." style="padding: 0.5rem; border-radius: 6px; border: 1px solid #cbd5e1;">
+                    </div>
+                    <table class="ladder-rank-table" style="width: 100%; border-collapse: collapse; font-size: 0.9rem; flex-grow: 1; border-top: 1px solid #e2e8f0; margin-top: 10px;">
+                        <thead>
+                            <tr style="border-bottom: 2px solid #e2e8f0; font-weight: 600; text-align: left;">
+                                <th style="width:200px; padding: 8px 10px; text-align: center;">订单日期</th>
+                                <th style="padding: 8px 10px;">附加信息</th>
+                                <th style="width:200px; padding: 8px 10px; text-align: center;">订单金额</th>
+                                <th style="width:200px; padding: 8px 10px; text-align: center;">状态</th>
+                                <th style="width:200px; padding: 8px 10px; text-align: center;">操作</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% if checkdocs|length > 0 %}
+                                {%- for bdoc in checkdocs -%}
+                                <tr class="check-bills-item">
+                                    <td style="width:200px; padding: 8px 10px; text-align: center;">
+                                        {{ datetimeSpan(bdoc['createAt'], false, 'YYYY-MM-DD HH:mm:ss')|safe }}
+                                    </td>
+                                    <td style="padding: 8px 10px;">
+                                        <strong>{{ bdoc.content }}</strong>
+                                    </td>
+                                    <td style="width:200px; padding: 8px 10px; text-align: center;">
+                                        {{ bdoc.coins }}
+                                    </td>
+                                    <td style="width:200px; padding: 8px 10px; text-align: center;">
+                                        <p style="color: red;">待核销</p>
+                                    </td>
+                                    <td style="width:200px; padding: 8px 10px; text-align: center;">
+                                        <form method="post" style="display: inline-block;">
+                                            <input type="hidden" name="_csrf" value="{{ _csrf }}">
+                                            <button type="button" class="btn-stage btn-enable" onclick="handleCheck('{{ bdoc._id }}')">✏️ 核销</button>
+                                        </form>
+                                    </td>
+                                </tr>
+                                {%- endfor -%}
+                            {% else %}
+                                <tr>
+                                    <td colspan="4" style="grid-column: 1 / -1; text-align: center; padding: 2rem; border-radius: 8px;">📭 暂无订单数据</td>
+                                </tr>
+                            {% endif %}
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="ladder-round-form">
+                    <div style="display: flex; align-items: center; gap: 1rem; flex-wrap: wrap; justify-content: space-between;">
+                        <h3 style="font-size: 1.1rem; font-weight: 700; color: #0072ff; display: flex; align-items: center; gap: 6px;">
+                            📋 已核销订单
+                        </h3>
+                        <input type="text" id="bills-search" placeholder="🔍 搜索订单（附加信息）..." style="padding: 0.5rem; border-radius: 6px; border: 1px solid #cbd5e1;">
+                    </div>
+                    <table class="ladder-rank-table" style="width: 100%; border-collapse: collapse; font-size: 0.9rem; flex-grow: 1; border-top: 1px solid #e2e8f0; margin-top: 10px;">
+                        <thead>
+                            <tr style="border-bottom: 2px solid #e2e8f0; font-weight: 600; text-align: left;">
+                                <th style="width:200px; padding: 8px 10px; text-align: center;">订单日期</th>
+                                <th style="padding: 8px 10px;">附加信息</th>
+                                <th style="width:200px; padding: 8px 10px; text-align: center;">订单金额</th>
+                                <th style="width:200px; padding: 8px 10px; text-align: center;">状态</th>
+                                <th style="width:200px; padding: 8px 10px; text-align: center;">操作员</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% if checkeddocs|length > 0 %}
+                                {%- for bdoc in checkeddocs -%}
+                                <tr class="bills-item">
+                                    <td style="width:200px; padding: 8px 10px; text-align: center;">
+                                        {{ datetimeSpan(bdoc['createAt'], false, 'YYYY-MM-DD HH:mm:ss')|safe }}
+                                    </td>
+                                    <td style="padding: 8px 10px;">
+                                        <strong>{{ bdoc.content }}</strong>
+                                    </td>
+                                    <td style="width:200px; padding: 8px 10px; text-align: center;">
+                                        {{ bdoc.coins }}
+                                    </td>
+                                    <td style="width:200px; padding: 8px 10px; text-align: center;">
+                                        <p style="color: green;">已核销</p>
+                                    </td>
+                                    <td style="width:200px; padding: 8px 10px; text-align: center;">
+                                        {{ bdoc.playerName }}
+                                    </td>
+                                </tr>
+                                {%- endfor -%}
+                            {% else %}
+                                <tr>
+                                    <td colspan="4" style="grid-column: 1 / -1; text-align: center; padding: 2rem; border-radius: 8px;">📭 暂无订单数据</td>
+                                </tr>
+                            {% endif %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // 搜索功能
+    document.getElementById('bills-search').addEventListener('input', function() {
+        const searchTerm = this.value.toLowerCase();
+        document.querySelectorAll('.bills-item').forEach(item => {
+            const title = item.querySelector('strong').textContent.toLowerCase();
+            if (title.includes(searchTerm)) {
+                item.style.display = 'table-row';
+            } else {
+                item.style.display = 'none';
+            }
+        });
+    });
+});
+
+function handleCheck(id) {
+    if (!confirm('确定要核销该订单吗？')) return;
+
+    fetch('/bills/manage', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            operation: 'checkBills',
+            billsId: id,
+        })
+    }).then(() => {
+        location.reload();
+    });
+}
+</script>
+{% endblock%}

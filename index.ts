@@ -5,7 +5,6 @@ import {
 import { CoinsModel, BillsModel, GoodsModel, BagModel } from './model';
 import path from 'path';
 import { HeatmapModel } from './virtual_goods';
-import { Certificate } from 'crypto';
 
 // 商品列表
 class ShopHandler extends Handler {

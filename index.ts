@@ -5,6 +5,7 @@ import {
 import { CoinsModel, BillsModel, GoodsModel, BagModel } from './model';
 import path from 'path';
 import { HeatmapModel } from './virtual_goods';
+import { Certificate } from 'crypto';
 
 // 商品列表
 class ShopHandler extends Handler {
@@ -603,4 +604,9 @@ export async function apply(ctx: Context) {
     ctx.injectUI('UserDropdown', 'coin_manage', { icon: 'bold', displayName: '钱包&背包' }, PRIV.PRIV_USER_PROFILE);
     ctx.injectUI('UserDropdown', 'shop', { icon: 'search', displayName: '神秘商店' }, PRIV.PRIV_USER_PROFILE);
     ctx.injectUI('UserDropdown', 'bills_manage', { icon: 'edit', displayName: '奖励&核销' }, PRIV.PRIV_MANAGE_ALL_DOMAIN);
+
+    ctx.injectUI('Nav', 'shop', {}, PRIV.PRIV_USER_PROFILE);
+    ctx.i18n.load('zh', {
+        shop: '神秘商店',
+    })
 }

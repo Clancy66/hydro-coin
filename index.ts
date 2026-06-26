@@ -191,9 +191,9 @@ class CoinManageHandler extends Handler {
             throw new FileExistsError('你已经装配该商品');
         }
 
-        const same = await BagModel.getMany({uid: this.user._id, type: bag.type, loaded: true});
-        if (same.length > 0) {
-            throw new ForbiddenError('你已装配同类型商品，同类型商品只能装配一个');
+        const same = await BagModel.getOne({uid: this.user._id, type: bag.type, loaded: true});
+        if (same) {
+            await BagModel.unload(this.user._id, new ObjectId(same.goodsId));
         }
 
         await BagModel.load(this.user._id, new ObjectId(goodsId));

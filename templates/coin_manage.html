@@ -303,7 +303,7 @@ table.ranking-table td.col--ac-count {
                 <div class="ladder-round-form">
                     <div style="display: flex; align-items: center; gap: 1rem; flex-wrap: wrap; justify-content: space-between; margin-bottom: 15px;">
                         <h3 style="font-size: 1.1rem; font-weight: 700; color: #0072ff; margin: 0 0 1.25rem 0; display: flex; align-items: center; gap: 6px;">
-                            🎒 我的背包<p style="padding-left: 10px; color: #aebbd6; font-size: 0.9rem;">同类型虚拟商品只能装配一个！</p>
+                            🎒 我的背包<p style="padding-left: 10px; color: #aebbd6; font-size: 0.9rem;">同类型虚拟商品只能装配一个，重复装配会自动挤掉同类已装配商品！</p>
                         </h3>
                         <input type="text" id="bags-search" placeholder="🔍 搜索商品（名称）..." style="padding: 0.5rem; border-radius: 6px; border: 1px solid #cbd5e1;">
                     </div>
@@ -515,6 +515,8 @@ function handleLoaded(id) {
 }
 
 function handleUnload(id) {
+    if (!confirm('确定要取消装配该商品吗？')) return;
+
     fetch('/coin/manage', {
         method: 'POST',
         headers: {

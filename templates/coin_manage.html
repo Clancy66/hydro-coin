@@ -413,7 +413,7 @@ table.ranking-table td.col--ac-count {
                         <tr>
                             <td class="col--user">
                                 <div class="avatar-wrapper">
-                                    <img data-uid="{{ udoc.uid }}" class="user-avatar small user-profile-avatar" loading="lazy" src="{{ avatarUrl(udoc.avatar|default('')) }}" width="20" height="20">
+                                    <img data-uid="{{ udoc.uid }}" class="user-avatar small user-profile-avatar" loading="lazy" src="{{ avatarUrl(udoc.playerInfo.avatar|default('')) }}" width="20" height="20">
                                     <img
                                         class="avatar-frame"
                                         data-uid="{{ udoc.uid }}"

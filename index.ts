@@ -369,7 +369,7 @@ class ShopManageHandler extends Handler {
     }
 
     async postAddGoods(args: any) {
-        const { goodsId, name, description, price, amount, limit, type, status } = args;
+        const { goodsId, name, description, price, amount, limit, type, stat } = args;
 
         const file = this.request.files?.image;
 
@@ -381,6 +381,9 @@ class ShopManageHandler extends Handler {
             await StorageModel.put(`user/${this.user._id}/${file.originalFilename}`, file.filepath, this.user._id);
             imageUrl = '/file/' + this.user._id + '/' + file.originalFilename;    
         }
+
+        let status = false;
+        if (stat == "true") status = true;
 
         const goods = await GoodsModel.getOne({_id: new ObjectId(goodsId)});
         if (goodsId !== "" && goodsId !== undefined) {
@@ -396,7 +399,7 @@ class ShopManageHandler extends Handler {
                 Number(limit),
                 imageUrl,
                 Number(type),
-                Boolean(status)
+                status
             );
         }
         else {
@@ -408,7 +411,7 @@ class ShopManageHandler extends Handler {
                 Number(limit),
                 imageUrl,
                 Number(type),
-                Boolean(status)
+                status
             );
         }
 

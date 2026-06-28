@@ -592,8 +592,6 @@ export async function apply(ctx: Context) {
 
             if (bdoc) return ;
 
-            console.log(pdoc);
-
             // 5. 写账单
             if (pdoc.pid) {
                 await BillsModel.add(

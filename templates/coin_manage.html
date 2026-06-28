@@ -248,6 +248,26 @@ table.ranking-table td.col--ac-count {
         border-color: #373a40 !important;
     }
 
+.avatar-wrapper {
+  display: inline-block;
+  position: relative;
+  width: 20px;
+  height: 20px;
+  margin-right: 5px;
+  padding: 0 !important;
+  border: none !important;
+  background: none !important;
+}
+
+.avatar-frame {
+  position: absolute;
+  top: -5px;
+  left: -5px;
+  width: 30px !important;
+  max-width: none !important;
+  height: 30px !important;
+  pointer-events: none;
+}
 </style>
 
 <div class="row">
@@ -367,7 +387,7 @@ table.ranking-table td.col--ac-count {
                 
                 <div class="ladder-round-form">
                     <h3 style="font-size: 1.1rem; font-weight: 700; color: #0072ff; margin: 0 0 1.25rem 0; display: flex; align-items: center; gap: 6px;">
-                        💰 金币榜单
+                        💰 金币榜单<p style="padding-left: 10px; color: #aebbd6; font-size: 0.9rem;">按照刷题、竞技、打卡所得依次降序排列</p>
                     </h3>
                     <div data-fragment-id="ranking">
                     {% if not udocs.length %}
@@ -392,7 +412,58 @@ table.ranking-table td.col--ac-count {
                         {%- for udoc in udocs -%}
                         <tr>
                             <td class="col--user">
-                                <img class="small user-profile-avatar v-center" loading="lazy" src="{{ avatarUrl(udoc.playerInfo.avatar|default('')) }}" width="20" height="20">
+                                <div class="avatar-wrapper">
+                                    <img data-uid="{{ udoc.uid }}" class="user-avatar small user-profile-avatar" loading="lazy" src="{{ avatarUrl(udoc.avatar|default('')) }}" width="20" height="20">
+                                    <img
+                                        class="avatar-frame"
+                                        data-uid="{{ udoc.uid }}"
+                                        src=""
+                                        style="visibility:hidden"
+                                    >
+                                    <script>
+                                    (async function() {
+                                        try {
+                                            const response = await fetch('/avatar/frame?uid={{ udoc.uid }}');
+                                            const data = await response.json();
+
+                                            document
+                                                .querySelectorAll(
+                                                    '.avatar-frame[data-uid="{{ udoc.uid }}"]'
+                                                )
+                                                .forEach(frame => {
+                                                    if (data.success) {
+                                                        frame.src = data.userAvatarFrame.imageUrl;
+                                                        frame.style.visibility = 'visible';
+                                                    }
+                                                });
+
+                                        } catch (error) {
+                                            console.error(error);
+                                        }
+                                    })();
+                                    (async function() {
+                                        try {
+                                            const response = await fetch('/avatar?uid={{ udoc.uid }}');
+                                            const data = await response.json();
+
+                                            document
+                                                .querySelectorAll(
+                                                    '.user-avatar[data-uid="{{ udoc.uid }}"]'
+                                                )
+                                                .forEach(frame => {
+                                                    if (data.success) {
+                                                        frame.src = data.userAvatar.imageUrl;
+
+                                                        frame.style.visibility = 'visible';
+                                                    }
+                                                });
+
+                                        } catch (error) {
+                                            console.error(error);
+                                        }
+                                    })();
+                                    </script>
+                                </div>
                                 <a class="user-profile-name uname--lv{{ udoc.playerInfo.level|default(0) }}" href="{{ url('user_detail', uid=udoc.playerInfo._id) }}">
                                     {% if handler.user.hasPerm(perm.PERM_VIEW_USER_PRIVATE_INFO) and udoc.playerInfo.displayName and udoc.playerInfo.displayName != udoc.playerInfo.uname %}
                                     {{ udoc.playerInfo.displayName }} ({{ udoc.playerInfo.uname }})

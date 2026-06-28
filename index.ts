@@ -592,15 +592,29 @@ export async function apply(ctx: Context) {
 
             if (bdoc) return ;
 
+            console.log(pdoc);
+
             // 5. 写账单
-            await BillsModel.add(
-                1,
-                rdoc.uid,
-                goodsIdStart + '-' + String(rdoc._id),
-                ddoc.price,
-                '[刷题奖励] 首次 AC ' + pdoc.pid,
-                2
-            );
+            if (pdoc.pid) {
+                await BillsModel.add(
+                    1,
+                    rdoc.uid,
+                    goodsIdStart + '-' + String(rdoc._id),
+                    ddoc.price,
+                    '[刷题奖励] 首次 AC ' + pdoc.pid + ' ' + pdoc.title,
+                    2
+                );    
+            }
+            else {
+                await BillsModel.add(
+                    1,
+                    rdoc.uid,
+                    goodsIdStart + '-' + String(rdoc._id),
+                    ddoc.price,
+                    '[刷题奖励] 首次 AC ' + pdoc.docId + ' ' + pdoc.title,
+                    2
+                );  
+            }
 
             await CoinsModel.inc(rdoc.uid, {
                 total: Number(ddoc.price),

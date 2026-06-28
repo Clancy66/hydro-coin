@@ -60,8 +60,8 @@ class ShopHandler extends Handler {
             await BillsModel.add(this.user._id, this.user._id, goodsId, -goods.price, currentLog, check);
             if (goods.amount > 0) {
                 await GoodsModel.updateStock(goods._id, -1);
-                await GoodsModel.updateSale(goods._id, 1);
             }
+            await GoodsModel.updateSale(goods._id, 1);
             await CoinsModel.inc(this.user._id, { total: -goods.price });
             await BagModel.add(this.user._id, goods._id, goods.type, false);
 

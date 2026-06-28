@@ -383,6 +383,7 @@ class ShopManageHandler extends Handler {
         }
 
         let status = false;
+        console.log(stat);
         if (stat == "true") status = true;
 
         const goods = await GoodsModel.getOne({_id: new ObjectId(goodsId)});

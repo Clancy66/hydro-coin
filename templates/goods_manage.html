@@ -242,13 +242,13 @@ html[data-mantine-color-scheme="dark"] .stage-type-select {
                                 <label style="font-size: 0.85rem; font-weight: 600; margin-bottom: 0.5rem; display: block;">❓ 是否上架</label>
                                 <div class="status-radio-flex-row" style="display: flex; gap: 1.5rem; flex-wrap: wrap; width: 100%;">
                                     <label style="flex: 1; background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 8px; padding: 0.75rem 1rem; display: flex; align-items: center; gap: 8px; cursor: pointer;">
-                                        <input type="radio" name="status" value="true" {% if goods.status == true %} checked {% endif %} style="margin: 0;">
+                                        <input type="radio" name="stat" value="true" {% if goods.status == true %} checked {% endif %} style="margin: 0;">
                                         <div>
                                             <b style="color: #16a34a; font-size: 0.9rem; display: block;">🟢 上架</b>
                                         </div>
                                     </label>
                                     <label style="flex: 1; background: #eff6ff; border: 1px solid #dbeafe; border-radius: 8px; padding: 0.75rem 1rem; display: flex; align-items: center; gap: 8px; cursor: pointer;">
-                                        <input type="radio" name="status" value="false" {% if goods.status == false %} checked {% endif %} style="margin: 0;">
+                                        <input type="radio" name="stat" value="false" {% if goods.status == false %} checked {% endif %} style="margin: 0;">
                                         <div>
                                             <b style="color: #2563eb; font-size: 0.9rem; display: block;">🔵 隐藏</b>
                                         </div>

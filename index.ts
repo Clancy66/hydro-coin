@@ -515,6 +515,27 @@ class BackgroundHandler extends Handler {
     }
 }
 
+// 6:首次 AC
+class FirstAcHandler extends Handler {
+    async get() {
+        const uid = this.request.query.uid;
+        const goodsId = this.request.query.goodsId;
+        const firstAc = await BillsModel.getOne({uid: Number(uid), goodsId: goodsId});
+
+        if (firstAc) {
+            this.response.body = {
+                success: true,
+                reward: firstAc.coins
+            };
+        }
+        else {
+            this.response.body = {
+                success: false
+            }; 
+        }
+    }
+}
+
 // 配置项及路由
 export async function apply(ctx: Context) {
     // type: 0:实物, 1:域内首次 AC, 2:热力图
@@ -556,26 +577,26 @@ export async function apply(ctx: Context) {
             if (rdoc.status !== STATUS.STATUS_ACCEPTED) return;
 
             // 2. 排除比赛
-            if (rdoc.contest) return;
-            if (!updated) return;
+            if (rdoc.contest || !updated) return ;
 
             // 3. 查奖励配置
-            const ddoc = await GoodsModel.getOne({ name: rdoc.domainId });
+            const ddoc = await GoodsModel.getOne({ name: rdoc.domainId, type: 1 });
             if (!ddoc || ddoc.status === false) return;
 
             // 4. 防重复（核心）
+            const goodsIdStart = String(rdoc.domainId) + String(rdoc.pid);
             const bdoc = await BillsModel.getOne({
                 uid: rdoc.uid,
-                goodsId: String(rdoc.pid)
+                goodsId: new RegExp(`^${goodsIdStart}`)
             });
 
-            if (bdoc) return;
+            if (bdoc) return ;
 
             // 5. 写账单
             await BillsModel.add(
                 1,
                 rdoc.uid,
-                String(rdoc.pid),
+                goodsIdStart + '-' + String(rdoc._id),
                 ddoc.price,
                 '[刷题奖励] 首次 AC ' + pdoc.pid,
                 2
@@ -594,11 +615,11 @@ export async function apply(ctx: Context) {
     ctx.Route('goods_manage', '/goods/manage', ShopManageHandler, PRIV.PRIV_MANAGE_ALL_DOMAIN);
     ctx.Route('coin_manage', '/coin/manage', CoinManageHandler, PRIV.PRIV_USER_PROFILE);
     ctx.Route('bills_manage', '/bills/manage', BillManageHandler, PRIV.PRIV_MANAGE_ALL_DOMAIN);
-    // 全局挂载头像框、头像、背景
+    // 全局挂载头像框、头像、背景、首次 AC
     ctx.Route('avatar_frame', '/avatar/frame', AvatarFrameHandler, PRIV.PRIV_USER_PROFILE);
     ctx.Route('my_avatar', '/avatar', AvatarHandler, PRIV.PRIV_USER_PROFILE);
     ctx.Route('my_background', '/background', BackgroundHandler, PRIV.PRIV_USER_PROFILE);
-
+    ctx.Route('my_background', '/check-first', FirstAcHandler, PRIV.PRIV_USER_PROFILE);
     
     ctx.injectUI('UserDropdown', 'coin_manage', { icon: 'bold', displayName: '钱包&背包' }, PRIV.PRIV_USER_PROFILE);
     ctx.injectUI('UserDropdown', 'shop', { icon: 'search', displayName: '神秘商店' }, PRIV.PRIV_USER_PROFILE);

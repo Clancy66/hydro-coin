@@ -377,13 +377,12 @@ class ShopManageHandler extends Handler {
         if (file.size > 0) {
             if (file.size > 8 * 1024 * 1024) throw new ValidationError('file');
             const ext = path.extname(file.originalFilename).toLowerCase();
-            if (!['.jpg', '.jpeg', '.png'].includes(ext)) throw new ValidationError('file');
+            if (!['.jpg', '.jpeg', '.png', '.webp'].includes(ext)) throw new ValidationError('file');
             await StorageModel.put(`user/${this.user._id}/${file.originalFilename}`, file.filepath, this.user._id);
             imageUrl = '/file/' + this.user._id + '/' + file.originalFilename;    
         }
 
         let status = false;
-        console.log(stat);
         if (stat == "true") status = true;
 
         const goods = await GoodsModel.getOne({_id: new ObjectId(goodsId)});

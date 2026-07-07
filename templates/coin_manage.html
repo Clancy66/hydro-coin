@@ -520,7 +520,10 @@ table.ranking-table td.col--ac-count {
                                         {% if bdoc.check == 1 %}
                                             <p style="color: green;">已核销</p>
                                         {% elif bdoc.check == 0 %}
-                                            <p style="color: red;">待核销</p>
+                                            <form method="post" style="display: inline-block;">
+                                                <input type="hidden" name="_csrf" value="{{ _csrf }}">
+                                                <button type="button" class="btn-stage btn-enable" onclick="handleWithdraw('{{ bdoc._id }}')">✏️ 撤销订单</button>
+                                            </form>
                                         {% elif bdoc.check == 2 %}
                                             <p>无需核销</p>
                                         {% endif %}
@@ -596,6 +599,23 @@ function handleUnload(id) {
         body: JSON.stringify({
             operation: 'unloadGoods',
             goodsId: id,
+        })
+    }).then(() => {
+        location.reload();
+    });
+}
+
+function handleWithdraw(id) {
+    if (!confirm('确定要撤销该订单吗？')) return;
+
+    fetch('/coin/manage', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            operation: 'withdrawBills',
+            billsId: id,
         })
     }).then(() => {
         location.reload();

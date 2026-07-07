@@ -219,6 +219,22 @@ class CoinManageHandler extends Handler {
 
         // this.response.redirect = '/coin/manage';
     }
+
+    async postWithdrawBills(args: any) {
+        const { billsId } = args;
+        const bills = await BillsModel.getOne({_id: new ObjectId(billsId)});
+        if (!bills) {
+            throw new NotFoundError('订单不存在');
+        }
+
+        const coins = bills.coins;
+        const result = await BillsModel.withdraw(new ObjectId(billsId));
+        if (result) {
+            await CoinsModel.inc(this.user._id, {total: -coins});
+        }
+
+        // this.response.redirect = '/bills/manage';
+    }
 }
 
 // 订单管理

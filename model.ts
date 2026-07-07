@@ -115,6 +115,13 @@ class BillsModel {
         return result.modifiedCount;
     }
 
+    static async withdraw(_id: ObjectId) {
+        const result = await this.coll.deleteOne(
+            { _id: _id }
+        );
+        return result.deletedCount;
+    }
+
     static async updateContent(_id: ObjectId, content: string) {
         const result = await this.coll.updateOne(
             { _id: _id },

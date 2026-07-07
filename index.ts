@@ -287,7 +287,7 @@ class BillManageHandler extends Handler {
     }
 
     async post() {
-        if (!this.user.hasPriv(PRIV.PRIV_MANAGE_ALL_DOMAIN)) {
+        if (!this.user.hasPriv(PRIV.PRIV_SET_PERM)) {
             throw new ForbiddenError('发布指令遭拒：您非本域高级管理人员！');
         }
     }
@@ -336,7 +336,7 @@ class BillManageHandler extends Handler {
 // 商品管理
 class ShopManageHandler extends Handler {
     async get() {
-        if (!this.user.hasPriv(PRIV.PRIV_MANAGE_ALL_DOMAIN)) {
+        if (!this.user.hasPriv(PRIV.PRIV_SET_PERM)) {
             throw new ForbiddenError('发布指令遭拒：您非本域高级管理人员！');
         }
 
@@ -364,7 +364,7 @@ class ShopManageHandler extends Handler {
     }
 
     async post() {
-        if (!this.user.hasPriv(PRIV.PRIV_MANAGE_ALL_DOMAIN)) {
+        if (!this.user.hasPriv(PRIV.PRIV_SET_PERM)) {
             throw new ForbiddenError('发布指令遭拒：您非本域高级管理人员！');
         }
     }
@@ -643,9 +643,9 @@ export async function apply(ctx: Context) {
     });
 
     ctx.Route('shop', '/shop', ShopHandler, PRIV.PRIV_USER_PROFILE);
-    ctx.Route('goods_manage', '/goods/manage', ShopManageHandler, PRIV.PRIV_MANAGE_ALL_DOMAIN);
+    ctx.Route('goods_manage', '/goods/manage', ShopManageHandler, PRIV.PRIV_SET_PERM);
     ctx.Route('coin_manage', '/coin/manage', CoinManageHandler, PRIV.PRIV_USER_PROFILE);
-    ctx.Route('bills_manage', '/bills/manage', BillManageHandler, PRIV.PRIV_MANAGE_ALL_DOMAIN);
+    ctx.Route('bills_manage', '/bills/manage', BillManageHandler, PRIV.PRIV_SET_PERM);
     // 全局挂载头像框、头像、背景、首次 AC
     ctx.Route('avatar_frame', '/avatar/frame', AvatarFrameHandler, PRIV.PRIV_USER_PROFILE);
     ctx.Route('my_avatar', '/avatar', AvatarHandler, PRIV.PRIV_USER_PROFILE);
@@ -654,7 +654,7 @@ export async function apply(ctx: Context) {
     
     ctx.injectUI('UserDropdown', 'coin_manage', { icon: 'bold', displayName: '钱包&背包' }, PRIV.PRIV_USER_PROFILE);
     ctx.injectUI('UserDropdown', 'shop', { icon: 'search', displayName: '神秘商店' }, PRIV.PRIV_USER_PROFILE);
-    ctx.injectUI('UserDropdown', 'bills_manage', { icon: 'edit', displayName: '奖励&核销' }, PRIV.PRIV_MANAGE_ALL_DOMAIN);
+    ctx.injectUI('UserDropdown', 'bills_manage', { icon: 'edit', displayName: '奖励&核销' }, PRIV.PRIV_SET_PERM);
 
     ctx.injectUI('Nav', 'shop', {}, PRIV.PRIV_USER_PROFILE);
     ctx.i18n.load('zh', {

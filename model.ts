@@ -23,7 +23,7 @@ interface Bills {
     goodsId: string;    // 商品
     coins: number;      // 金币数量
     content: string;    // 操作日志
-    check: number;      // 0:已核销, 1:待核销, 2:虚拟商品无需核销
+    check: number;      // 0:待核销, 1:已核销, 2:虚拟商品无需核销
 }
 
 interface Goods {

@@ -253,7 +253,7 @@ class BillManageHandler extends Handler {
             {
                 $lookup: {
                     from: 'user',
-                    localField: 'uid',
+                    localField: 'rootId',
                     foreignField: '_id',
                     as: 'playerInfo'
                 }

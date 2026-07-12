@@ -38,7 +38,7 @@ class ShopHandler extends Handler {
             const ucoins = await CoinsModel.getOne(this.user._id);
 
             // 2. 检查购买权限 (保留原有的逻辑判断)
-            if (goods.status === false) {
+            if (goods.status === false || goods.amount === 0) {
                 throw new Error("❗此商品已下架"); // 这里用普通 Error 即可，因为我们要自己处理
             }
 

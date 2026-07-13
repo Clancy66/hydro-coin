@@ -260,32 +260,49 @@ class BillManageHandler extends Handler {
                     from: 'user',
                     localField: 'uid',
                     foreignField: '_id',
-                    as: 'playerInfo'
+                    as: 'userInfo'
                 }
             },
             {
                 $project: {
                     createAt: -1, coins: 1, content: 1, check: 1,
-                    playerName: { $arrayElemAt: ['$playerInfo.uname', 0] } // 只取用户名
+                    userName: { $arrayElemAt: ['$userInfo.uname', 0] } // 只取用户名
                 }
             }
         ]).toArray();
 
         const checkeddocs = await db.collection('bills').aggregate([
-            { $match: {check: 1 }},
+            { $match: { check: 1 } },
             { $sort: { createAt: -1 } },
+            // 1. 关联操作员 (rootId)
             {
                 $lookup: {
                     from: 'user',
                     localField: 'rootId',
                     foreignField: '_id',
-                    as: 'playerInfo'
+                    as: 'operatorInfo'
                 }
             },
+            // 2. 关联目标用户 (uid)
+            {
+                $lookup: {
+                    from: 'user',
+                    localField: 'uid',
+                    foreignField: '_id', // 如果你的 uid 对应的是 user 表的 _id
+                    as: 'userInfo'
+                }
+            },
+            // 3. 投影输出字段
             {
                 $project: {
-                    createAt: -1, coins: 1, content: 1, check: 1,
-                    playerName: { $arrayElemAt: ['$playerInfo.uname', 0] } // 只取用户名
+                    createAt: 1, // 注意：原代码中的 -1 是语法错误，投影中显示字段应设为 1
+                    coins: 1,
+                    content: 1,
+                    check: 1,
+                    // 提取操作员用户名
+                    operatorName: { $arrayElemAt: ['$operatorInfo.uname', 0] },
+                    // 提取目标用户用户名
+                    userName: { $arrayElemAt: ['$userInfo.uname', 0] }
                 }
             }
         ]).toArray();

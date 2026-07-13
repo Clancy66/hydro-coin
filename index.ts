@@ -130,15 +130,10 @@ class CoinManageHandler extends Handler {
         const total = await db.collection('coins').countDocuments();
 
         const ucoins = await CoinsModel.getOne(this.user._id);
-        // 假设你要排除的指定内容
-        const excludeText = "打卡奖励|刷题奖励|竞技奖励"; 
-
         const bdocs = await db.collection('bills').aggregate([
         { 
             $match: { 
-            uid: this.user._id,
-            // 核心修改：利用正则表达式排除包含指定内容的项
-            content: { $not: { $regex: excludeText } } 
+            uid: this.user._id
             } 
         },
         { 
@@ -649,28 +644,6 @@ export async function apply(ctx: Context) {
             });
 
             if (bdoc) return ;
-
-            // 5. 写账单
-            if (pdoc.pid) {
-                await BillsModel.add(
-                    1,
-                    rdoc.uid,
-                    goodsIdStart + '-' + String(rdoc._id),
-                    ddoc.price,
-                    '[刷题奖励] 首次 AC ' + pdoc.pid + ' ' + pdoc.title,
-                    2
-                );    
-            }
-            else {
-                await BillsModel.add(
-                    1,
-                    rdoc.uid,
-                    goodsIdStart + '-' + String(rdoc._id),
-                    ddoc.price,
-                    '[刷题奖励] 首次 AC ' + pdoc.docId + ' ' + pdoc.title,
-                    2
-                );  
-            }
 
             await CoinsModel.inc(rdoc.uid, {
                 total: Number(ddoc.price),

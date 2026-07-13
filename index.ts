@@ -101,7 +101,7 @@ class CoinManageHandler extends Handler {
         }
 
         const page = parseInt(this.request.query.page || '1');
-        const limit = 20;
+        const limit = 10;
         const skip = (page - 1) * limit;
 
         const pipeline = [
@@ -130,23 +130,37 @@ class CoinManageHandler extends Handler {
         const total = await db.collection('coins').countDocuments();
 
         const ucoins = await CoinsModel.getOne(this.user._id);
+        // 假设你要排除的指定内容
+        const excludeText = "打卡奖励|刷题奖励|竞技奖励"; 
+
         const bdocs = await db.collection('bills').aggregate([
-            { $match: {uid: this.user._id }},
-            { $sort: { createAt: -1 } },
-            {
-                $lookup: {
-                    from: 'user',
-                    localField: 'rootId',
-                    foreignField: '_id',
-                    as: 'playerInfo'
-                }
-            },
-            {
-                $project: {
-                    createAt: -1, coins: 1, content: 1, check: 1,
-                    playerName: { $arrayElemAt: ['$playerInfo.uname', 0] } // 只取用户名
-                }
+        { 
+            $match: { 
+            uid: this.user._id,
+            // 核心修改：利用正则表达式排除包含指定内容的项
+            content: { $not: { $regex: excludeText } } 
+            } 
+        },
+        { 
+            $sort: { createAt: -1 } 
+        },
+        { 
+            $lookup: {
+            from: 'user',
+            localField: 'rootId',
+            foreignField: '_id',
+            as: 'playerInfo'
             }
+        },
+        { 
+            $project: {
+            createAt: 1,
+            coins: 1,
+            content: 1,
+            check: 1,
+            playerName: { $arrayElemAt: ["$playerInfo.uname", 0] } 
+            }
+        }
         ]).toArray();
 
         const bagpipeline = [
@@ -169,7 +183,7 @@ class CoinManageHandler extends Handler {
         const bagdocs = await db.collection('bag').aggregate(bagpipeline).toArray();
 
         this.response.template = 'coin_manage.html';
-        this.response.body = { ...this.response.body, ucoins, bdocs, bagdocs, udocs, page, upcount: Math.ceil(total / 20) };
+        this.response.body = { ...this.response.body, ucoins, bdocs, bagdocs, udocs, page, upcount: Math.ceil(total / limit) };
     }
 
     async post() {
@@ -235,10 +249,10 @@ class CoinManageHandler extends Handler {
         await GoodsModel.updateStock(new ObjectId(bills.goodsId), 1);  // 还原商品库存
         await GoodsModel.updateSale(new ObjectId(bills.goodsId), -1);  // 还原商品销量
 
-        const coins = Math.floor(bills.coins * 0.9); // 扣除 10% 手续费
+        const coins = Math.floor(-bills.coins * 0.9); // 扣除 10% 手续费
         const result = await BillsModel.withdraw(new ObjectId(billsId));
         if (result) {
-            await CoinsModel.inc(this.user._id, {total: -coins});
+            await CoinsModel.inc(this.user._id, {total: coins});
         }
 
         // this.response.redirect = '/bills/manage';

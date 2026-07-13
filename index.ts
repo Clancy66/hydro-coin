@@ -63,7 +63,7 @@ class ShopHandler extends Handler {
             }
             else {
                 // 实物商品不进背包
-                await BagModel.add(this.user._id, goodsId, goods.type, false);
+                await BagModel.add(this.user._id, goods._id, goods.type, false);
             }
 
             await BillsModel.add(this.user._id, this.user._id, goodsId, -goods.price, currentLog, check);
@@ -180,6 +180,8 @@ class CoinManageHandler extends Handler {
         ];
 
         const bagdocs = await db.collection('bag').aggregate(bagpipeline).toArray();
+
+        console.log(bagdocs);
 
         this.response.template = 'coin_manage.html';
         this.response.body = { ...this.response.body, ucoins, bdocs, bagdocs, udocs, page, upcount: Math.ceil(total / limit) };

@@ -38,8 +38,12 @@ class ShopHandler extends Handler {
             const ucoins = await CoinsModel.getOne(this.user._id);
 
             // 2. 检查购买权限 (保留原有的逻辑判断)
-            if (goods.status === false || goods.amount === 0) {
+            if (goods.status === false) {
                 throw new Error("❗此商品已下架"); // 这里用普通 Error 即可，因为我们要自己处理
+            }
+
+            if (goods.type === 0 && goods.amount === 0) {
+                throw new Error("❗此商品已售罄"); // 这里用普通 Error 即可，因为我们要自己处理
             }
 
             if (ucoins.total < goods.price) {
@@ -226,8 +230,12 @@ class CoinManageHandler extends Handler {
         if (!bills) {
             throw new NotFoundError('订单不存在');
         }
+        
+        await BagModel.delete(bills.uid, new ObjectId(bills.goodsId)); // 删除背包中的商品
+        await GoodsModel.updateStock(new ObjectId(bills.goodsId), 1);  // 还原商品库存
+        await GoodsModel.updateSale(new ObjectId(bills.goodsId), -1);  // 还原商品销量
 
-        const coins = bills.coins;
+        const coins = Math.floor(bills.coins * 0.9); // 扣除 10% 手续费
         const result = await BillsModel.withdraw(new ObjectId(billsId));
         if (result) {
             await CoinsModel.inc(this.user._id, {total: -coins});

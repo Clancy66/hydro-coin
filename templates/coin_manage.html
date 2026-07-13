@@ -606,7 +606,7 @@ function handleUnload(id) {
 }
 
 function handleWithdraw(id) {
-    if (!confirm('确定要撤销该订单吗？')) return;
+    if (!confirm('确定要撤销该订单吗？扣除 10% 的手续费！')) return;
 
     fetch('/coin/manage', {
         method: 'POST',

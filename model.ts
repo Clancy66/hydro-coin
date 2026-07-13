@@ -208,7 +208,7 @@ class GoodsModel {
             { _id },  
             { $inc: { sale } }
         );
-        return result.modifiedCount;  
+        return result.modifiedCount;
     }
 }
 
@@ -224,6 +224,13 @@ class BagModel {
         });
 
         return result.insertedId;
+    }
+
+    static async delete(uid: number, goodsId: ObjectId) {
+        const result = await this.coll.deleteOne(
+            { uid: uid, goodsId: goodsId }
+        );
+        return result.deletedCount;
     }
 
     static async load(uid: number, goodsId: ObjectId) {

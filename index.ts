@@ -131,7 +131,8 @@ class CoinManageHandler extends Handler {
         const bdocs = await db.collection('bills').aggregate([
         { 
             $match: { 
-            uid: this.user._id
+                uid: this.user._id,
+                content: { $not: { $regex: "刷题奖励" } } 
             } 
         },
         { 
@@ -643,7 +644,7 @@ export async function apply(ctx: Context) {
 
             if (bdoc) return ;
 
-            const currentLog = "[刷题奖励] " + rdoc.domainId + " - " + rdoc.pid;
+            const currentLog = "[刷题奖励] 首次 AC " + pdoc.pid + " " + pdoc.title;
             await BillsModel.add(1, rdoc.uid, goodsId, Number(ddoc.price), currentLog, 2);
 
             await CoinsModel.inc(rdoc.uid, {

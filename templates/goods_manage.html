@@ -286,7 +286,7 @@ html[data-mantine-color-scheme="dark"] .stage-type-select {
                                     </span>
                                 </div>
                                 <div class="select-type" style="font-size: 0.85rem; margin: 0.5rem 0;">
-                                    单价：{{ goods.price }} 🪙 | 储量：{% if goods.amount > 0%}{{ goods.amount }}{% else %}∞{% endif %} 📦 | 销量：{{ goods.sale }}
+                                    单价：{{ goods.price }} 🪙 | 储量：{% if goods.amount > 0 || goods.type == 0 %}{{ goods.amount }}{% else %}∞{% endif %} 📦 | 销量：{{ goods.sale }}
                                 </div>
                                 <div class="stage-actions">
                                     <!-- 编辑 -->

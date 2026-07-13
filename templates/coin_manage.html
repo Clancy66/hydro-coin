@@ -330,7 +330,7 @@ table.ranking-table td.col--ac-count {
                     {% if bagdocs|length > 0 %}
                     <div class="shop-goods-grid">
                         {% for doc in bagdocs %}
-                        {% if doc.type != 1 %}
+                        {% if doc.type >= 2 %}
                         <div class="goods-card" data-cost="{{doc.goodsInfo.price}}" data-name="{{doc.goodsInfo.name}}">
 
                             <div style="position: absolute;
@@ -358,19 +358,16 @@ table.ranking-table td.col--ac-count {
                             <div class="goods-card__footer">
                                 <h3 class="goods-card__title">{{doc.goodsInfo.name}}</h3>
                                 <p class="goods-card__desc">{{doc.goodsInfo.description}}</p>
-
-                                {% if doc.type != 0 %}
-                                    {% if not doc.loaded %}
-                                    <div style="margin-top: 15px;">
-                                        <input type="hidden" name="_csrf" value="{{ _csrf }}">
-                                        <button type="submit" class="btn-exchange" onclick="handleLoaded('{{ doc.goodsInfo._id }}')" style="width: 100%;">立即装配</button>
-                                    </div>
-                                    {% else %}
-                                    <div style="margin-top: 15px;">
-                                        <input type="hidden" name="_csrf" value="{{ _csrf }}">
-                                        <button type="submit" class="btn-exchange-disable" onclick="handleUnload('{{ doc.goodsInfo._id }}')" style="width: 100%;">取消装配</button>
-                                    </div>
-                                    {% endif %}
+                                {% if not doc.loaded %}
+                                <div style="margin-top: 15px;">
+                                    <input type="hidden" name="_csrf" value="{{ _csrf }}">
+                                    <button type="submit" class="btn-exchange" onclick="handleLoaded('{{ doc.goodsInfo._id }}')" style="width: 100%;">立即装配</button>
+                                </div>
+                                {% else %}
+                                <div style="margin-top: 15px;">
+                                    <input type="hidden" name="_csrf" value="{{ _csrf }}">
+                                    <button type="submit" class="btn-exchange-disable" onclick="handleUnload('{{ doc.goodsInfo._id }}')" style="width: 100%;">取消装配</button>
+                                </div>
                                 {% endif %}
                             </div>
                         </div>

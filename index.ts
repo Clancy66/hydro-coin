@@ -635,13 +635,16 @@ export async function apply(ctx: Context) {
             if (!ddoc || ddoc.status === false) return;
 
             // 4. 防重复（核心）
-            const goodsIdStart = String(rdoc.domainId) + String(rdoc.pid);
+            const goodsId = rdoc.domainId + rdoc.pid + '-' + rdoc._id.toString();
             const bdoc = await BillsModel.getOne({
                 uid: rdoc.uid,
-                goodsId: new RegExp(`^${goodsIdStart}`)
+                goodsId: goodsId
             });
 
             if (bdoc) return ;
+
+            const currentLog = "[刷题奖励] " + rdoc.domainId + " - " + rdoc.pid;
+            await BillsModel.add(1, rdoc.uid, goodsId, Number(ddoc.price), currentLog, 2);
 
             await CoinsModel.inc(rdoc.uid, {
                 total: Number(ddoc.price),

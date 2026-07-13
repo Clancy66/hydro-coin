@@ -635,17 +635,17 @@ export async function apply(ctx: Context) {
             if (!ddoc || ddoc.status === false) return;
 
             // 4. 防重复（核心）
-            const goodsId = rdoc.domainId + rdoc.pid;
+            const goodsIdStart = rdoc.domainId + rdoc.pid;
             const bdoc = await BillsModel.getOne({
                 uid: rdoc.uid,
-                goodsId: goodsId
+                goodsId: { $regex: '^' + goodsIdStart }
             });
 
             if (bdoc) return ;
 
             // 这里必须进账单，不然会出现重复奖励的情况。
             const currentLog = "[刷题奖励] 首次 AC " + pdoc.pid + " " + pdoc.title;
-            await BillsModel.add(1, rdoc.uid, goodsId, Number(ddoc.price), currentLog, 2);
+            await BillsModel.add(1, rdoc.uid, goodsIdStart + '-' + rdoc._id.toString(), Number(ddoc.price), currentLog, 2);
 
             await CoinsModel.inc(rdoc.uid, {
                 total: Number(ddoc.price),

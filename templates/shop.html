@@ -217,7 +217,7 @@
                         <h3 class="goods-card__title">{{doc.name}}</h3>
                         <p class="goods-card__desc">{{doc.description}}</p>
                         <div style="display: flex; justify-content: space-between;">
-                            <span class="status-badge status-active">储量：{% if doc.amount > 0 || doc.type == 0 %}{{ doc.amount }}{% else  %}∞{% endif %}</span>
+                            <span class="status-badge status-active">储量：{% if doc.amount > 0 or doc.type == 0 %}{{ doc.amount }}{% else  %}∞{% endif %}</span>
                             <span class="goods-limit status-badge status-disabled">🛒 {% if doc.limit != 0 %}限购 {{doc.limit}}{% else %}不限购{% endif %}</span>
                         </div>
                     

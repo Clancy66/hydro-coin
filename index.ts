@@ -613,7 +613,6 @@ export async function apply(ctx: Context) {
 
         const currentLog = '[virtual_goods] 虚拟商品添加完成！';
         await db.collection('system').insertOne({ _id: 'virtual_goods', value: currentLog });
-        console.log(currentLog);
     }
 
     // 个人主页挂载热力图
@@ -636,7 +635,7 @@ export async function apply(ctx: Context) {
             if (!ddoc || ddoc.status === false) return;
 
             // 4. 防重复（核心）
-            const goodsId = rdoc.domainId + rdoc.pid + '-' + rdoc._id.toString();
+            const goodsId = rdoc.domainId + rdoc.pid;
             const bdoc = await BillsModel.getOne({
                 uid: rdoc.uid,
                 goodsId: goodsId
@@ -644,6 +643,7 @@ export async function apply(ctx: Context) {
 
             if (bdoc) return ;
 
+            // 这里必须进账单，不然会出现重复奖励的情况。
             const currentLog = "[刷题奖励] 首次 AC " + pdoc.pid + " " + pdoc.title;
             await BillsModel.add(1, rdoc.uid, goodsId, Number(ddoc.price), currentLog, 2);
 

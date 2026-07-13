@@ -537,7 +537,7 @@ class AvatarHandler extends Handler {
     async get() {
         const uid = this.request.query.uid;
         const hasAvatar = await BagModel.getOne({uid: Number(uid), type: 4, loaded: true});
-        
+
         if (hasAvatar) {
             const userAvatar = await GoodsModel.getOne({_id: hasAvatar.goodsId});
             this.response.body = {

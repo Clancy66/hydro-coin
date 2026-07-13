@@ -34,7 +34,8 @@ interface Goods {
     amount: number;     // 储量
     limit: number;      // 限购, 0:不限购
     imageUrl: string;   // 展示图
-    type: number;       // 0:实物, 1:域内首次 AC, 2:热力图, 3:头像框, 4:头像, 5:背景, 6:AC 弹窗
+    type: number;       // 0:实物, 1:域内首次 AC, 2:热力图, 3:头像框, 4:头像, 
+    // 5:背景, 6:AC 弹窗, 7:RP 抵扣券, 8:天梯赛门票
     status: boolean;    // true:上架, false:下架
     sale: number;       // 销量
 }
@@ -45,6 +46,7 @@ interface Bag {
     goodsId: ObjectId;    // 已购商品
     type: number;       // 商品类别，用于限制同类虚拟商品装配数量
     loaded: boolean;    // false:未装配, true:已装配
+    used: boolean;      // false:未使用, true:已使用
 }
 
 declare module 'hydrooj' {
@@ -220,7 +222,8 @@ class BagModel {
             uid: uid,
             goodsId: goodsId,
             type: type,
-            loaded: loaded
+            loaded: loaded,
+            used: false
         });
 
         return result.insertedId;

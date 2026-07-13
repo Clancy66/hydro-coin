@@ -201,7 +201,7 @@
                         font-weight: bold;
                         z-index: 2;
                         text-shadow: 0 1px 2px rgba(0,0,0,0.2);">
-                        {% if doc.type == 0 %}实物{% elif doc.type == 3 %}挂件{% else %}装饰{% endif %}
+                        {% if doc.type == 0 %}实物{% elif doc.type == 3 %}挂件{% elif doc.type == 7 or doc.type == 8 %}道具{% else %}装饰{% endif %}
                     </div>
 
                     <div style="height: 120px;">

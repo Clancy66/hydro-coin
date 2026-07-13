@@ -61,6 +61,11 @@ class ShopHandler extends Handler {
             if (goods.type === 0) {
                 check = 0;  // 实物核销状态为 false
             }
+            else {
+                // 实物商品不进背包
+                await BagModel.add(this.user._id, goodsId, goods.type, false);
+            }
+
             await BillsModel.add(this.user._id, this.user._id, goodsId, -goods.price, currentLog, check);
             if (goods.amount > 0) {
                 await GoodsModel.updateStock(goods._id, -1);
@@ -590,7 +595,7 @@ class FirstAcHandler extends Handler {
 
 // 配置项及路由
 export async function apply(ctx: Context) {
-    // type: 0:实物, 1:域内首次 AC, 2:热力图
+    // type: 0:实物, 1:域内首次 AC, 2:热力图, 7:RP 抵扣券, 8:天梯赛门票
     // 添加虚拟商品，仅首次安装时运行
     const virtual_goods = await db.collection('system').findOne({ _id: 'virtual_goods' });
     if (!virtual_goods) {
@@ -605,6 +610,40 @@ export async function apply(ctx: Context) {
                 limit: 1, 
                 imageUrl: "/heatmap.png", 
                 type: 2,
+                status: true,
+                sale: 0
+            }},
+            { upsert: true }
+        );
+
+        // RP 抵扣券
+        await db.collection('goods').findOneAndUpdate(
+            { type: 7 },
+            { $set: {
+                name: 'RP 抵扣券',
+                description: '在 RP 不足的赛事中抵扣 RP', 
+                price: 39, 
+                amount: 0,
+                limit: 0, 
+                imageUrl: "/rp_ticket.png", 
+                type: 7,
+                status: true,
+                sale: 0
+            }},
+            { upsert: true }
+        );
+
+        // 天梯赛门票
+        await db.collection('goods').findOneAndUpdate(
+            { type: 8 },
+            { $set: {
+                name: '天梯赛门票',
+                description: '在天梯赛中抵扣门票和 RP', 
+                price: 79, 
+                amount: 0,
+                limit: 0, 
+                imageUrl: "/ticket.png", 
+                type: 8,
                 status: true,
                 sale: 0
             }},

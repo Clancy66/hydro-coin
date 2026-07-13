@@ -625,7 +625,7 @@ export async function apply(ctx: Context) {
                 price: 39, 
                 amount: 0,
                 limit: 0, 
-                imageUrl: "/rp_ticket.png", 
+                imageUrl: "/rp_ticket.webp", 
                 type: 7,
                 status: true,
                 sale: 0
@@ -642,7 +642,7 @@ export async function apply(ctx: Context) {
                 price: 79, 
                 amount: 0,
                 limit: 0, 
-                imageUrl: "/ticket.png", 
+                imageUrl: "/ticket.webp", 
                 type: 8,
                 status: true,
                 sale: 0

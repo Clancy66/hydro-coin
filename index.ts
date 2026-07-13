@@ -67,8 +67,6 @@ class ShopHandler extends Handler {
             }
             await GoodsModel.updateSale(goods._id, 1);
             await CoinsModel.inc(this.user._id, { total: -goods.price });
-            await BagModel.add(this.user._id, goods._id, goods.type, false);
-
 
             // 4. ✅ 成功响应：明确返回 JSON
             this.response.body = {

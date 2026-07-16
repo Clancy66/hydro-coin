@@ -687,7 +687,7 @@ export async function apply(ctx: Context) {
             // 这里必须进账单，不然会出现重复奖励的情况。
             const currentLog = "[刷题奖励] 首次 AC " + pdoc.pid + " " + pdoc.title;
             await BillsModel.add(1, rdoc.uid, goodsIdStart + '-' + rdoc._id.toString(), Number(ddoc.price), currentLog, 2);
-
+            await GoodsModel.updateSale(ddoc._id, 1);
             await CoinsModel.inc(rdoc.uid, {
                 total: Number(ddoc.price),
                 problems: Number(ddoc.price)

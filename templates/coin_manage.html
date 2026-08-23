@@ -37,6 +37,7 @@
 .card.second { background: #67c23a; }
 .card.third { background: #f56c6c; }
 .card.forth { background: #f56ce5; }
+.card.fifth { background: #50d6ae; }
 
 /* 新增：表格外层包裹容器，防止渲染偏移 */
 .ranking-table-container {
@@ -311,6 +312,11 @@ table.ranking-table td.col--ac-count {
                         <div class="card third">
                             <div class="label">打卡所得</div>
                             <div class="value">{{ ucoins.checkin | default(0) }}</div>
+                        </div>
+
+                        <div class="card fifth">
+                            <div class="label">题解奖励</div>
+                            <div class="value">{{ ucoins.solution | default(0) }}</div>
                         </div>
 
                         <div class="card forth">

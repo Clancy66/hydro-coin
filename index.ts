@@ -239,6 +239,7 @@ class CoinManageHandler extends Handler {
         // this.response.redirect = '/coin/manage';
     }
 
+    // 只有实物订单可以撤销
     async postWithdrawBills(args: any) {
         const { billsId } = args;
         const bills = await BillsModel.getOne({_id: new ObjectId(billsId)});
@@ -246,7 +247,7 @@ class CoinManageHandler extends Handler {
             throw new NotFoundError('订单不存在');
         }
         
-        await BagModel.delete(bills.uid, new ObjectId(bills.goodsId)); // 删除背包中的商品
+        // await BagModel.delete(bills.uid, new ObjectId(bills.goodsId)); // 删除背包中的商品
         await GoodsModel.updateStock(new ObjectId(bills.goodsId), 1);  // 还原商品库存
         await GoodsModel.updateSale(new ObjectId(bills.goodsId), -1);  // 还原商品销量
 
@@ -598,7 +599,7 @@ class FirstAcHandler extends Handler {
 // 配置项及路由
 export async function apply(ctx: Context) {
     // type: 0:实物, 1:域内首次 AC, 2:热力图, 7:RP 抵扣券, 8:天梯赛门票
-    // 添加虚拟商品，仅首次安装时运行
+    // 添加虚拟商品，仅首次安装时运行，这里添加之后 type 好像有时会出问题，最好进入数据库查看一下
     const virtual_goods = await db.collection('system').findOne({ _id: 'virtual_goods' });
     if (!virtual_goods) {
         // 热力图

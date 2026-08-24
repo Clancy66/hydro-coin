@@ -304,6 +304,11 @@ table.ranking-table td.col--ac-count {
                             <div class="value">{{ ucoins.problems | default(0) }}</div>
                         </div>
 
+                        <div class="card fifth">
+                            <div class="label">题解奖励</div>
+                            <div class="value">{{ ucoins.solution | default(0) }}</div>
+                        </div>
+
                         <div class="card first">
                             <div class="label">竞技所得</div>
                             <div class="value">{{ ucoins.stages | default(0) }}</div>
@@ -312,11 +317,6 @@ table.ranking-table td.col--ac-count {
                         <div class="card third">
                             <div class="label">打卡所得</div>
                             <div class="value">{{ ucoins.checkin | default(0) }}</div>
-                        </div>
-
-                        <div class="card fifth">
-                            <div class="label">题解奖励</div>
-                            <div class="value">{{ ucoins.solution | default(0) }}</div>
                         </div>
 
                         <div class="card forth">
@@ -418,6 +418,7 @@ table.ranking-table td.col--ac-count {
                             <th class="col--user">{{ _('Username') }}</th>
                             <th class="col--total-rp">余额</th>
                             <th class="col--ac-count">刷题所得</th>
+                            <th class="col--ac-count">题解所得</th>
                             <th class="col--ac-count">竞技所得</th>
                             <th class="col--ac-count">打卡所得</th>
                             <th class="col--ac-count">额外所得</th>
@@ -489,6 +490,7 @@ table.ranking-table td.col--ac-count {
                             </td>
                             <td class="col--total-rp" style="font-weight: bold; color: #3b82f6;">{{ udoc.total|default(0) }}</td>
                             <td class="col--ac-count" style="font-weight: 600; color: #16a34a;">{{ udoc.problems|default(0) }}</td>
+                            <td class="col--ac-count" style="font-weight: 600; color: #16a34a;">{{ udoc.solution|default(0) }}</td>
                             <td class="col--ac-count" style="font-weight: 600; color: #16a34a;">{{ udoc.stages|default(0) }}</td>
                             <td class="col--ac-count" style="font-weight: 600; color: #16a34a;">{{ udoc.checkin|default(0) }}</td>
                             <td class="col--ac-count" style="font-weight: 600; color: #16a34a;">{{ udoc.bonus|default(0) }}</td>

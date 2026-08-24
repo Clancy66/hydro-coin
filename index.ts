@@ -108,7 +108,7 @@ class CoinManageHandler extends Handler {
         const skip = (page - 1) * limit;
 
         const pipeline = [
-            { $sort: { problems: -1, stages: -1 } },
+            { $sort: { problems: -1, solution: -1, stages: -1 } },
 
             {
                 $lookup: {

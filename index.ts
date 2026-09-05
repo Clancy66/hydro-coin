@@ -344,9 +344,9 @@ class BillManageHandler extends Handler {
         }
 
         const ucoin = await CoinsModel.getOne(user._id);
-        if (ucoin.total + Number(coins) < 0) {
-            throw new ForbiddenError('用户 ' + uidOrName + ' 金币不足，请调整扣除金额');
-        }
+        // if (ucoin.total + Number(coins) < 0) {
+        //     throw new ForbiddenError('用户 ' + uidOrName + ' 金币不足，请调整扣除金额');
+        // }
 
         // 创建账单
         const billid = await BillsModel.add(this.user._id, user._id, "", Number(coins), "[额外扣除] " + content, 2);
